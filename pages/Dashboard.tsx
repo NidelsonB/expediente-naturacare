@@ -44,7 +44,7 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
     }).format(new Date(isoString));
   };
 
-  const PatientCard = ({ patient }: { patient: Patient }) => {
+  const PatientCard: React.FC<{ patient: Patient }> = ({ patient }) => {
     const lastVisit = getLastVisit(patient.id);
     return (
       <Link 

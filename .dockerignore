@@ -5,11 +5,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # Build outputs
-dist
 dist-ssr
 *.local
 
-# Environment files
+# Environment files (se configuran en EasyPanel)
 .env
 .env.local
 .env.*.local
@@ -31,12 +30,13 @@ dist-ssr
 .gitattributes
 
 # Docker
-Dockerfile
-.dockerignore
 docker-compose.yml
 
-# Documentation
+# Documentation (innecesarios en producción)
 README.md
+README_DATABASE.md
+INICIO_RAPIDO.md
+DEPLOY_EASYPANEL.md
 *.md
 
 # Testing
@@ -47,3 +47,7 @@ coverage
 .cache
 .parcel-cache
 .eslintcache
+
+# Lock files (opcional - comentar si quieres usarlos)
+# package-lock.json
+# yarn.lock

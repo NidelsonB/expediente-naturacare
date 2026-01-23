@@ -1,12 +1,11 @@
-
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Patient, Visit } from '../types';
 
 interface PatientDetailProps {
   patients: Patient[];
   visits: Visit[];
-  addVisit: (visit: any) => void;
+  addVisit: (visit: any) => Promise<void>;
   doctorName: string;
 }
 
@@ -16,6 +15,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const [visitNotes, setVisitNotes] = useState<string[]>(['']);
   const [visitTreatment, setVisitTreatment] = useState('');
   const [visitMedications, setVisitMedications] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const patient = useMemo(() => patients.find(p => p.id === id), [patients, id]);
   
@@ -33,7 +34,6 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
       </div>
     );
   }
-
   const handleNoteChange = (index: number, value: string) => {
     const newNotes = [...visitNotes];
     newNotes[index] = value;
@@ -62,22 +62,30 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     }
   };
 
-  const handleSaveVisit = (e: React.FormEvent) => {
+  const handleSaveVisit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanNotes = visitNotes.filter(n => n.trim() !== '');
     if (cleanNotes.length === 0 && !visitTreatment.trim()) return;
     
-    addVisit({
-      patientId: patient.id,
-      notes: cleanNotes,
-      treatment: visitTreatment,
-      medications: visitMedications
-    });
+    setLoading(true);
+    setError('');
+    try {
+      await addVisit({
+        patientId: patient.id,
+        notes: cleanNotes,
+        treatment: visitTreatment,
+        medications: visitMedications
+      });
 
-    setVisitNotes(['']);
-    setVisitTreatment('');
-    setVisitMedications('');
-    setIsNewVisitOpen(false);
+      setVisitNotes(['']);
+      setVisitTreatment('');
+      setVisitMedications('');
+      setIsNewVisitOpen(false);
+    } catch (err: any) {
+      setError(err.message || 'Error al guardar la visita');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatDate = (isoString: string) => {
@@ -251,6 +259,11 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
             </button>
           </div>
           <form onSubmit={handleSaveVisit} className="p-10 space-y-8">
+            {error && (
+              <div className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
+                <p className="text-sm text-rose-700 font-black uppercase tracking-wide">Error: {error}</p>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-black text-slate-500 mb-4 uppercase tracking-widest">Motivo y Observaciones <span className="font-normal opacity-50 lowercase">(Enter para nueva línea)</span></label>
               <div className="space-y-3">
@@ -295,9 +308,17 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
             <div className="flex justify-end pt-6">
               <button 
                 type="submit"
-                className="px-14 py-5 bg-emerald-600 text-white font-black rounded-3xl hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-200 text-xl uppercase tracking-widest"
+                disabled={loading}
+                className="px-14 py-5 bg-emerald-600 text-white font-black rounded-3xl hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-200 text-xl uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
               >
-                Guardar Consulta
+                {loading ? (
+                  <>
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <span>Guardar Consulta</span>
+                )}
               </button>
             </div>
           </form>

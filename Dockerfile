@@ -1,7 +1,7 @@
-# Multi-stage build para optimizar el tamaño de la imagen
+# Multi-stage build para NaturaCare (Frontend + Backend)
 
-# Etapa 1: Build
-FROM node:20-alpine AS builder
+# Etapa 1: Build del Frontend
+FROM node:20-alpine AS frontend-builder
 
 WORKDIR /app
 
@@ -9,29 +9,59 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependencias
-RUN npm ci --only=production --ignore-scripts
+RUN npm ci
 
 # Copiar el código fuente
 COPY . .
 
-# Build de la aplicación
+# Build del frontend
 RUN npm run build
 
-# Etapa 2: Production
-FROM nginx:alpine
+# Etapa 2: Production - Node.js + Nginx
+FROM node:20-alpine
 
-# Copiar configuración personalizada de nginx
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Instalar nginx
+RUN apk add --no-cache nginx
 
-# Copiar los archivos build desde la etapa anterior
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Crear directorios necesarios
+RUN mkdir -p /run/nginx /var/log/nginx /usr/share/nginx/html
 
-# Exponer puerto 80
-EXPOSE 80
+WORKDIR /app
+
+# Copiar archivos del backend
+COPY package*.json ./
+COPY server.js ./
+COPY api.ts ./
+COPY types.ts ./
+
+# Instalar solo dependencias de producción
+RUN npm ci --only=production
+
+# Copiar el build del frontend a nginx
+COPY --from=frontend-builder /app/dist /usr/share/nginx/html
+
+# Copiar configuración de nginx actualizada
+COPY nginx.conf /etc/nginx/http.d/default.conf
+
+# Variables de entorno por defecto (se pueden sobrescribir en EasyPanel)
+ENV DB_HOST=localhost
+ENV DB_PORT=5432
+ENV DB_NAME=naturacare
+ENV DB_USER=postgres
+ENV DB_PASSWORD=postgres
+ENV PORT=3001
+ENV NODE_ENV=production
+
+# Exponer puertos
+EXPOSE 80 3001
+
+# Copiar script de inicio
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost/health || exit 1
 
-# Comando para iniciar nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Iniciar servicios
+CMD ["/app/start.sh"]

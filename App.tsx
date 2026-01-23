@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { db } from './store';
-import { AppState, User, Patient, Visit } from './types';
+import { User, Patient, Visit } from './types';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -50,84 +50,115 @@ const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout:
 };
 
 const App: React.FC = () => {
-  const [state, setState] = useState<AppState>(db.get());
+  const [user, setUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('naturacare_user');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Load data from API
   useEffect(() => {
-    db.save(state);
-  }, [state]);
+    if (user) {
+      loadData();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
-  const handleLogin = (user: User) => {
-    setState(prev => ({ ...prev, user }));
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [patientsData, visitsData] = await Promise.all([
+        db.getPatients(),
+        db.getVisits()
+      ]);
+      setPatients(patientsData);
+      setVisits(visitsData);
+    } catch (error) {
+      console.error('Error loading data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogin = (newUser: User) => {
+    setUser(newUser);
+    localStorage.setItem('naturacare_user', JSON.stringify(newUser));
   };
 
   const handleLogout = () => {
-    setState(prev => ({ ...prev, user: null }));
+    setUser(null);
+    localStorage.removeItem('naturacare_user');
   };
 
-  const addPatientWithFirstVisit = (patientData: Omit<Patient, 'id' | 'createdAt'>, visitData: Omit<Visit, 'id' | 'patientId' | 'date' | 'createdAt'>) => {
-    const patientId = crypto.randomUUID();
-    const now = new Date().toISOString();
-    
-    const newPatient: Patient = {
-      ...patientData,
-      id: patientId,
-      createdAt: now
-    };
-
-    const firstVisit: Visit = {
-      ...visitData,
-      id: crypto.randomUUID(),
-      patientId: patientId,
-      date: now,
-      createdAt: now
-    };
-
-    setState(prev => ({
-      ...prev,
-      patients: [...prev.patients, newPatient],
-      visits: [...prev.visits, firstVisit]
-    }));
-    
-    return patientId;
+  const addPatientWithFirstVisit = async (
+    patientData: Omit<Patient, 'id' | 'createdAt'>, 
+    visitData: Omit<Visit, 'id' | 'patientId' | 'date' | 'createdAt'>
+  ): Promise<string> => {
+    try {
+      const newPatient = await db.createPatient(patientData);
+      const firstVisit = await db.createVisit({
+        ...visitData,
+        patientId: newPatient.id
+      });
+      
+      setPatients(prev => [...prev, newPatient]);
+      setVisits(prev => [...prev, firstVisit]);
+      
+      return newPatient.id;
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      throw error;
+    }
   };
 
-  const addVisit = (visit: Omit<Visit, 'id' | 'date' | 'createdAt'>) => {
-    const newVisit: Visit = {
-      ...visit,
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
-    setState(prev => ({
-      ...prev,
-      visits: [...prev.visits, newVisit]
-    }));
+  const addVisit = async (visit: Omit<Visit, 'id' | 'date' | 'createdAt'>) => {
+    try {
+      const newVisit = await db.createVisit(visit);
+      setVisits(prev => [...prev, newVisit]);
+    } catch (error) {
+      console.error('Error creating visit:', error);
+      throw error;
+    }
   };
 
   const isDuiUnique = (dui: string) => {
     if (!dui || !dui.trim()) return true;
-    return !state.patients.some(p => p.dui === dui.trim());
+    return !patients.some(p => p.dui === dui.trim());
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 font-bold text-lg">Cargando datos de PostgreSQL...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <HashRouter>
-      <Layout user={state.user} onLogout={handleLogout}>
+      <Layout user={user} onLogout={handleLogout}>
         <Routes>
           <Route 
             path="/login" 
-            element={state.user ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} 
+            element={user ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} 
           />
           <Route 
             path="/" 
-            element={state.user ? <Dashboard patients={state.patients} visits={state.visits} /> : <Navigate to="/login" />} 
+            element={user ? <Dashboard patients={patients} visits={visits} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/patients/new" 
-            element={state.user ? <NewPatient addPatientWithFirstVisit={addPatientWithFirstVisit} isDuiUnique={isDuiUnique} /> : <Navigate to="/login" />} 
+            element={user ? <NewPatient addPatientWithFirstVisit={addPatientWithFirstVisit} isDuiUnique={isDuiUnique} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/patients/:id" 
-            element={state.user ? <PatientDetail patients={state.patients} visits={state.visits} addVisit={addVisit} doctorName={state.user?.name || ''} /> : <Navigate to="/login" />} 
+            element={user ? <PatientDetail patients={patients} visits={visits} addVisit={addVisit} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

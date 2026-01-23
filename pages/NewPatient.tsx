@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Gender } from '../types';
 
 interface NewPatientProps {
-  addPatientWithFirstVisit: (patient: any, visit: any) => string;
+  addPatientWithFirstVisit: (patient: any, visit: any) => Promise<string>;
   isDuiUnique: (dui: string) => boolean;
 }
 
@@ -25,6 +24,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
   const [visitMedications, setVisitMedications] = useState('');
   
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleNoteChange = (index: number, value: string) => {
     const newNotes = [...visitNotes];
@@ -54,7 +54,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -66,20 +66,27 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
     const cleanNotes = visitNotes.filter(n => n.trim() !== '');
     if (cleanNotes.length === 0) return setError('Ingrese el motivo de consulta');
 
-    const id = addPatientWithFirstVisit(
-      {
-        ...formData,
-        age: Number(formData.age),
-        dui: formData.dui.trim() || undefined
-      },
-      {
-        notes: cleanNotes,
-        treatment: visitTreatment,
-        medications: visitMedications
-      }
-    );
-    
-    navigate(`/patients/${id}`);
+    setLoading(true);
+    try {
+      const id = await addPatientWithFirstVisit(
+        {
+          ...formData,
+          age: Number(formData.age),
+          dui: formData.dui.trim() || undefined
+        },
+        {
+          notes: cleanNotes,
+          treatment: visitTreatment,
+          medications: visitMedications
+        }
+      );
+      
+      navigate(`/patients/${id}`);
+    } catch (err: any) {
+      setError(err.message || 'Error al guardar el paciente');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -250,9 +257,17 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
           <Link to="/" className="text-slate-500 font-black uppercase text-sm tracking-widest hover:text-slate-800 transition-colors">Cancelar</Link>
           <button
             type="submit"
-            className="px-14 py-5 bg-emerald-600 text-white font-black rounded-3xl hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-100 active:scale-95 text-xl tracking-tight"
+            disabled={loading}
+            className="px-14 py-5 bg-emerald-600 text-white font-black rounded-3xl hover:bg-emerald-700 transition-all shadow-2xl shadow-emerald-100 active:scale-95 text-xl tracking-tight disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
           >
-            Finalizar y Guardar
+            {loading ? (
+              <>
+                <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Guardando...</span>
+              </>
+            ) : (
+              <span>Finalizar y Guardar</span>
+            )}
           </button>
         </div>
       </form>
