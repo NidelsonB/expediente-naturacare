@@ -28,6 +28,25 @@ pool.on('error', (err) => {
   console.error('❌ Error en la conexión de PostgreSQL:', err);
 });
 
+// Column mapping: PostgreSQL lowercase -> camelCase
+const columnMapping = {
+  'patientid': 'patientId',
+  'chronicillness': 'chronicIllness',
+  'medicalhistory': 'medicalHistory',
+  'createdat': 'createdAt'
+};
+
+// Convert PostgreSQL column names to camelCase
+const convertToCamelCase = (row) => {
+  const convertedRow = {};
+  for (const key in row) {
+    // Use mapping if exists, otherwise use the key as-is
+    const camelKey = columnMapping[key.toLowerCase()] || key;
+    convertedRow[camelKey] = row[key];
+  }
+  return convertedRow;
+};
+
 // Generic GET endpoint for any table
 app.get('/api/:table', async (req, res) => {
   try {
@@ -43,7 +62,9 @@ app.get('/api/:table', async (req, res) => {
     }
     
     const result = await pool.query(query, params);
-    res.json(result.rows);
+    const rows = result.rows.map(row => convertToCamelCase(row));
+    
+    res.json(rows);
   } catch (error) {
     console.error('Error en GET:', error);
     res.status(500).json({ error: error.message });
@@ -57,13 +78,20 @@ app.post('/api/:table', async (req, res) => {
     const data = req.body;
     
     const columns = Object.keys(data);
-    const values = Object.values(data);
+    const values = Object.values(data).map((val, idx) => {
+      // Convert arrays to JSON strings for JSONB columns
+      if (Array.isArray(val) && columns[idx] === 'notes') {
+        return JSON.stringify(val);
+      }
+      return val;
+    });
     const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
     
     const query = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`;
     const result = await pool.query(query, values);
     
-    res.status(201).json(result.rows[0]);
+    const convertedRow = convertToCamelCase(result.rows[0]);
+    res.status(201).json(convertedRow);
   } catch (error) {
     console.error('Error en POST:', error);
     res.status(500).json({ error: error.message });
@@ -77,7 +105,13 @@ app.put('/api/:table/:id', async (req, res) => {
     const data = req.body;
     
     const columns = Object.keys(data);
-    const values = Object.values(data);
+    const values = Object.values(data).map((val, idx) => {
+      // Convert arrays to JSON strings for JSONB columns
+      if (Array.isArray(val) && columns[idx] === 'notes') {
+        return JSON.stringify(val);
+      }
+      return val;
+    });
     const setClause = columns.map((col, i) => `${col} = $${i + 1}`).join(', ');
     
     const query = `UPDATE ${table} SET ${setClause} WHERE id = $${columns.length + 1} RETURNING *`;
@@ -87,7 +121,8 @@ app.put('/api/:table/:id', async (req, res) => {
       return res.status(404).json({ error: 'Registro no encontrado' });
     }
     
-    res.json(result.rows[0]);
+    const convertedRow = convertToCamelCase(result.rows[0]);
+    res.json(convertedRow);
   } catch (error) {
     console.error('Error en PUT:', error);
     res.status(500).json({ error: error.message });
