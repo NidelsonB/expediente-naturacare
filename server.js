@@ -158,7 +158,8 @@ app.get('/health', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 3001;
+// Backend API siempre usa puerto 3001 (Nginx está en 80)
+const PORT = process.env.BACKEND_PORT || 3001;
 
 app.listen(PORT, () => {
   console.log(`🚀 Servidor ejecutándose en http://localhost:${PORT}`);
