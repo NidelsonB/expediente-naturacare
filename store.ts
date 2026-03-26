@@ -1,86 +1,31 @@
 
-import { Patient, Visit } from './types';
-import { api } from './api';
+import { Patient, Visit, User, AppState, Gender } from './types';
 
-// API-based database operations
+const STORAGE_KEY = 'medical_records_data_v1';
+
+const INITIAL_STATE: AppState = {
+  user: null,
+  patients: [],
+  visits: [],
+};
+
 export const db = {
-  // Patients
-  async getPatients(): Promise<Patient[]> {
-    try {
-      return await api.get<Patient[]>('patients');
-    } catch (error) {
-      console.error('Error fetching patients:', error);
-      return [];
-    }
+  get: (): AppState => {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : INITIAL_STATE;
   },
-
-  async getPatient(id: string): Promise<Patient | null> {
-    try {
-      const patients = await api.get<Patient[]>('patients', id);
-      return patients[0] || null;
-    } catch (error) {
-      console.error('Error fetching patient:', error);
-      return null;
-    }
+  save: (state: AppState) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   },
-
-  async createPatient(patient: Omit<Patient, 'id' | 'createdAt'>): Promise<Patient> {
-    const now = new Date().toISOString();
-    return await api.post<Patient>('patients', {
-      ...patient,
-      id: crypto.randomUUID(),
-      createdAt: now
-    });
-  },
-
-  async updatePatient(id: string, patient: Partial<Patient>): Promise<Patient> {
-    return await api.put<Patient>('patients', id, patient);
-  },
-
-  async deletePatient(id: string): Promise<void> {
-    await api.delete('patients', id);
-  },
-
-  // Visits
-  async getVisits(): Promise<Visit[]> {
-    try {
-      return await api.get<Visit[]>('visits');
-    } catch (error) {
-      console.error('Error fetching visits:', error);
-      return [];
-    }
-  },
-
-  async getVisitsByPatient(patientId: string): Promise<Visit[]> {
-    try {
-      const visits = await api.get<Visit[]>('visits');
-      return visits.filter(v => v.patientId === patientId);
-    } catch (error) {
-      console.error('Error fetching visits:', error);
-      return [];
-    }
-  },
-
-  async createVisit(visit: Omit<Visit, 'id' | 'date' | 'createdAt'>): Promise<Visit> {
-    const now = new Date().toISOString();
-    return await api.post<Visit>('visits', {
-      ...visit,
-      id: crypto.randomUUID(),
-      date: now,
-      createdAt: now
-    });
-  },
-
-  async updateVisit(id: string, visit: Partial<Visit>): Promise<Visit> {
-    return await api.put<Visit>('visits', id, visit);
-  },
-
-  async deleteVisit(id: string): Promise<void> {
-    await api.delete('visits', id);
-  },
-
-  // Health check
-  async healthCheck() {
-    return await api.healthCheck();
+  reset: () => {
+    localStorage.removeItem(STORAGE_KEY);
   }
 };
+
+// Seed initial user if not exists
+const checkSeed = () => {
+  const state = db.get();
+  // For demo, we don't seed the active user, just ensure we have a structure.
+  db.save(state);
+};
+checkSeed();

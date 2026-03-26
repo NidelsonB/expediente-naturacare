@@ -1,68 +1,20 @@
-# Expediente Natura Care
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
 
-Una aplicación de gestión de expedientes médicos construida con React, TypeScript y Vite.
+# Run and deploy your AI Studio app
 
-## Características
+This contains everything you need to run your app locally.
 
-- Dashboard de pacientes
-- Crear nuevos pacientes
-- Ver detalles de pacientes
-- Sistema de login
-- Gestión de datos de pacientes
+View your app in AI Studio: https://ai.studio/apps/1a85e199-53fc-4f23-85b6-e737b9bb862e
 
-## Requisitos previos
+## Run Locally
 
-- Node.js (v16 o superior)
-- npm o yarn
+**Prerequisites:**  Node.js
 
-## Instalación
 
-1. Clona el repositorio
-```bash
-git clone https://github.com/NidelsonB/expediente-naturacare.git
-cd expediente-naturacare
-```
-
-2. Instala las dependencias
-```bash
-npm install
-```
-
-## Desarrollo
-
-Para iniciar el servidor de desarrollo:
-```bash
-npm run dev
-```
-
-La aplicación se abrirá en `http://localhost:5173`
-
-## Build
-
-Para crear una versión de producción:
-```bash
-npm run build
-```
-
-## Estructura del proyecto
-
-```
-src/
-├── pages/          # Páginas de la aplicación
-├── components/     # Componentes reutilizables
-├── App.tsx         # Componente principal
-├── store.ts        # Estado global
-├── types.ts        # Tipos TypeScript
-└── index.tsx       # Punto de entrada
-```
-
-## Tecnologías
-
-- **React** - Librería UI
-- **TypeScript** - Tipado estático
-- **Vite** - Bundler y servidor de desarrollo
-- **CSS** - Estilos
-
-## Licencia
-
-Este proyecto está bajo la licencia MIT.
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
