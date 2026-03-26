@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Patient, Visit } from '../types';
@@ -10,6 +11,8 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchMode, setSearchMode] = useState<'name' | 'dui'>('name');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const filteredPatients = useMemo(() => {
     if (!searchTerm) return [];
@@ -26,9 +29,23 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
 
   const recentPatients = useMemo(() => {
     return [...patients]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5);
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [patients]);
+
+  // Pagination logic
+  const paginatedPatients = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return recentPatients.slice(startIndex, endIndex);
+  }, [recentPatients, currentPage]);
+
+  const totalPages = Math.ceil(recentPatients.length / ITEMS_PER_PAGE);
+
+  // Reset to page 1 when search term changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   const getLastVisit = (patientId: string) => {
     const patientVisits = visits
@@ -43,7 +60,6 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
     }).format(new Date(isoString));
   };
 
-  // Fix: Explicitly typed as React.FC to allow 'key' prop in list mapping
   const PatientCard: React.FC<{ patient: Patient }> = ({ patient }) => {
     const lastVisit = getLastVisit(patient.id);
     return (
@@ -133,7 +149,7 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
               placeholder={searchMode === 'name' ? 'Buscar por nombre completo...' : 'Buscar por número de DUI...'}
               className="w-full pl-14 pr-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-xl font-medium outline-none"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
             />
             <div className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -184,13 +200,55 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
             <h2 className="text-xs font-black text-emerald-600 uppercase tracking-[0.2em] mb-6 flex items-center">
               Pacientes Recientes
               <div className="ml-3 h-1 flex-1 bg-emerald-50 rounded-full"></div>
+              <span className="ml-3 px-3 py-1 bg-slate-100 text-slate-600 rounded-full font-black text-xs">
+                Total: {recentPatients.length}
+              </span>
             </h2>
             {recentPatients.length > 0 ? (
-              <div className="grid grid-cols-1 gap-5">
-                {recentPatients.map(patient => (
-                  <PatientCard key={patient.id} patient={patient} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-5">
+                  {paginatedPatients.map(patient => (
+                    <PatientCard key={patient.id} patient={patient} />
+                  ))}
+                </div>
+                
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-3 mt-8">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl font-black text-sm uppercase tracking-widest text-slate-700 hover:bg-slate-50 hover:border-emerald-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                      ← Anterior
+                    </button>
+                    
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <button
+                          key={page}
+                          onClick={() => setCurrentPage(page)}
+                          className={`w-12 h-12 rounded-xl font-black text-sm transition-all ${
+                            currentPage === page
+                              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200'
+                              : 'bg-white border-2 border-slate-200 text-slate-600 hover:border-emerald-300 hover:bg-slate-50'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="px-6 py-3 bg-white border-2 border-slate-200 rounded-xl font-black text-sm uppercase tracking-widest text-slate-700 hover:bg-slate-50 hover:border-emerald-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-24 bg-white rounded-3xl border-2 border-dashed border-slate-200">
                 <p className="text-slate-400 text-xl font-bold italic">Base de datos vacía.</p>

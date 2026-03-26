@@ -32,7 +32,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             N
           </div>
           <h2 className="text-3xl font-black text-slate-900 tracking-tight">NaturaCare</h2>
-          <p className="mt-2 text-slate-500 font-medium">Bienvenido, ND. Selvin Lopez</p>
+          <p className="mt-2 text-slate-500 font-medium">Bienvenido, Dr. Selvin Lopez</p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
