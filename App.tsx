@@ -9,6 +9,8 @@ import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import NewPatient from './pages/NewPatient';
 import PatientDetail from './pages/PatientDetail';
+import SecretaryForm from './pages/SecretaryForm';
+import SecretaryDashboard from './pages/SecretaryDashboard';
 
 const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout: () => void }> = ({ children, user, onLogout }) => {
   if (!user) return <>{children}</>;
@@ -114,12 +116,33 @@ const App: React.FC = () => {
     }
   };
 
+  const addPatientOnly = async (patientData: Omit<Patient, 'id' | 'createdAt'>): Promise<string> => {
+    try {
+      const newPatient = await db.createPatient(patientData);
+      setPatients(prev => [...prev, newPatient]);
+      return newPatient.id;
+    } catch (error) {
+      console.error('Error creating patient without first visit:', error);
+      throw error;
+    }
+  };
+
   const addVisit = async (visit: Omit<Visit, 'id' | 'date' | 'createdAt'>) => {
     try {
       const newVisit = await db.createVisit(visit);
       setVisits(prev => [...prev, newVisit]);
     } catch (error) {
       console.error('Error creating visit:', error);
+      throw error;
+    }
+  };
+
+  const updatePatient = async (patientId: string, updates: Partial<Patient>) => {
+    try {
+      const updatedPatient = await db.updatePatient(patientId, updates);
+      setPatients(prev => prev.map(patient => patient.id === patientId ? updatedPatient : patient));
+    } catch (error) {
+      console.error('Error updating patient:', error);
       throw error;
     }
   };
@@ -158,7 +181,15 @@ const App: React.FC = () => {
           />
           <Route 
             path="/patients/:id" 
-            element={user ? <PatientDetail patients={patients} visits={visits} addVisit={addVisit} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
+            element={user ? <PatientDetail patients={patients} visits={visits} addVisit={addVisit} updatePatient={updatePatient} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/secretary" 
+            element={user ? <SecretaryForm addPatientOnly={addPatientOnly} isDuiUnique={isDuiUnique} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/secretary/today" 
+            element={user ? <SecretaryDashboard patients={patients} /> : <Navigate to="/login" />} 
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

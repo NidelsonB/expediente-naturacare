@@ -6,15 +6,18 @@ interface PatientDetailProps {
   patients: Patient[];
   visits: Visit[];
   addVisit: (visit: any) => Promise<void>;
+  updatePatient: (patientId: string, updates: Partial<Patient>) => Promise<void>;
   doctorName: string;
 }
 
-const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, doctorName }) => {
+const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, doctorName }) => {
   const { id } = useParams<{ id: string }>();
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [visitNotes, setVisitNotes] = useState<string[]>(['']);
   const [visitTreatment, setVisitTreatment] = useState('');
   const [visitMedications, setVisitMedications] = useState('');
+  const [visitChronicIllness, setVisitChronicIllness] = useState('');
+  const [visitMedicalHistory, setVisitMedicalHistory] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -77,9 +80,16 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
         medications: visitMedications
       });
 
+      await updatePatient(patient.id, {
+        chronicIllness: visitChronicIllness,
+        medicalHistory: visitMedicalHistory
+      });
+
       setVisitNotes(['']);
       setVisitTreatment('');
       setVisitMedications('');
+      setVisitChronicIllness('');
+      setVisitMedicalHistory('');
       setIsNewVisitOpen(false);
     } catch (err: any) {
       setError(err.message || 'Error al guardar la visita');
@@ -238,7 +248,11 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
         </h2>
         {!isNewVisitOpen && (
           <button 
-            onClick={() => setIsNewVisitOpen(true)}
+            onClick={() => {
+              setVisitChronicIllness(patient.chronicIllness || '');
+              setVisitMedicalHistory(patient.medicalHistory || '');
+              setIsNewVisitOpen(true);
+            }}
             className="px-8 py-4 bg-slate-800 text-white font-black rounded-2xl hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 flex items-center uppercase text-sm tracking-widest"
           >
             Nueva Consulta
@@ -252,7 +266,15 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           <div className="bg-emerald-50 px-10 py-6 border-b border-emerald-100 flex justify-between items-center">
             <h3 className="text-xl font-black text-emerald-800 uppercase tracking-widest">Nueva Hoja NaturaCare</h3>
             <button 
-              onClick={() => setIsNewVisitOpen(false)}
+              onClick={() => {
+                setVisitNotes(['']);
+                setVisitTreatment('');
+                setVisitMedications('');
+                setVisitChronicIllness('');
+                setVisitMedicalHistory('');
+                setError('');
+                setIsNewVisitOpen(false);
+              }}
               className="text-slate-400 hover:text-rose-600 font-black transition-colors uppercase text-xs"
             >
               Cancelar [×]
@@ -302,6 +324,28 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                   placeholder="Medicamentos y horarios..."
                   value={visitMedications}
                   onChange={(e) => setVisitMedications(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
+              <div>
+                <label className="block text-xs font-black text-rose-600 mb-3 uppercase tracking-widest">Enfermedad Crónica</label>
+                <input
+                  type="text"
+                  className="w-full px-5 py-4 bg-rose-50/30 border border-rose-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:bg-white focus:border-rose-500 transition-all text-lg font-bold text-rose-700 outline-none"
+                  placeholder="Ej: Hipertensión"
+                  value={visitChronicIllness}
+                  onChange={(e) => setVisitChronicIllness(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-black text-slate-500 mb-3 uppercase tracking-widest">Antecedentes Clínicos</label>
+                <textarea
+                  rows={3}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
+                  placeholder="Cirugías, alergias, hospitalizaciones..."
+                  value={visitMedicalHistory}
+                  onChange={(e) => setVisitMedicalHistory(e.target.value)}
                 />
               </div>
             </div>

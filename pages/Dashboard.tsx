@@ -133,12 +133,20 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Expedientes</h1>
           <p className="text-slate-500 text-lg font-medium">Buscador NaturaCare v1.0</p>
         </div>
-        <Link 
-          to="/patients/new"
-          className="inline-flex items-center px-8 py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100 active:scale-95 text-lg"
-        >
-          <span className="mr-2 text-2xl">+</span> Nuevo Paciente
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/secretary"
+            className="inline-flex items-center px-6 py-4 bg-white border border-slate-200 text-slate-700 font-black rounded-2xl hover:bg-slate-50 transition-all"
+          >
+            Registro Secretaría
+          </Link>
+          <Link 
+            to="/patients/new"
+            className="inline-flex items-center px-8 py-4 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-100 active:scale-95 text-lg"
+          >
+            <span className="mr-2 text-2xl">+</span> Nuevo Paciente
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">

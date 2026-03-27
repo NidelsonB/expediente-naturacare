@@ -2,6 +2,12 @@
 import { Patient, Visit } from './types';
 import { api } from './api';
 
+const removeUndefinedFields = <T extends Record<string, any>>(data: T): Partial<T> => {
+  return Object.fromEntries(
+    Object.entries(data).filter(([, value]) => value !== undefined)
+  ) as Partial<T>;
+};
+
 // API-based database operations
 export const db = {
   // Patients
@@ -26,15 +32,15 @@ export const db = {
 
   async createPatient(patient: Omit<Patient, 'id' | 'createdAt'>): Promise<Patient> {
     const now = new Date().toISOString();
-    return await api.post<Patient>('patients', {
+    return await api.post<Patient>('patients', removeUndefinedFields({
       ...patient,
       id: crypto.randomUUID(),
       createdAt: now
-    });
+    }));
   },
 
   async updatePatient(id: string, patient: Partial<Patient>): Promise<Patient> {
-    return await api.put<Patient>('patients', id, patient);
+    return await api.put<Patient>('patients', id, removeUndefinedFields(patient));
   },
 
   async deletePatient(id: string): Promise<void> {
