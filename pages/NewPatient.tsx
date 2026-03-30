@@ -26,6 +26,8 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const cleanNotes = visitNotes.filter(n => n.trim() !== '');
+
   const handleNoteChange = (index: number, value: string) => {
     const newNotes = [...visitNotes];
     newNotes[index] = value;
@@ -63,7 +65,6 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
     if (formData.dui.trim() && !isDuiUnique(formData.dui)) return setError('Este DUI ya existe');
     if (Number(formData.age) <= 0) return setError('Edad inválida');
 
-    const cleanNotes = visitNotes.filter(n => n.trim() !== '');
     if (cleanNotes.length === 0) return setError('Ingrese el motivo de consulta');
 
     setLoading(true);
@@ -248,6 +249,55 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                   value={visitMedications}
                   onChange={(e) => setVisitMedications(e.target.value)}
                 />
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Live Preview de Impresión</h3>
+                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">Formato Receta</span>
+              </div>
+              <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
+                <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h4 className="text-5xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h4>
+                      <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
+                      <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
+                    </div>
+                    <div className="text-right pt-1">
+                      <p className="text-4xl font-black text-slate-900 leading-tight">ND. Selvin Lopez</p>
+                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {new Date().toLocaleDateString('es-SV')}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t-[5px] border-emerald-500 mt-8 mb-10"></div>
+
+                  <p className="text-5xl font-black tracking-tight text-slate-900">PACIENTE: {formData.name.trim() || 'NOMBRE PENDIENTE'}</p>
+                  <div className="mt-3 flex items-center gap-8 text-[12px] text-slate-400 font-black uppercase tracking-[0.15em]">
+                    <span>DUI: {formData.dui.trim() || 'N/A'}</span>
+                    <span>Edad: {formData.age ? `${formData.age} años` : 'N/A'}</span>
+                  </div>
+
+                  <div className="mt-6 flex-1">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.16em] mb-3">Receta / Medicamentos:</p>
+                    <p className="text-4xl text-slate-900 leading-relaxed min-h-[390px] whitespace-pre-wrap">
+                      {visitMedications.trim() || ' '}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto pt-10 flex items-end justify-between gap-10">
+                    <div className="w-[42%]">
+                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.16em]">Próxima Cita:</p>
+                      <div className="border-b-2 border-slate-200 mt-6"></div>
+                    </div>
+                    <div className="w-[42%] text-center">
+                      <div className="border-t-2 border-slate-700"></div>
+                      <p className="mt-2 text-xs font-black text-slate-700 uppercase tracking-[0.14em]">Firma y sello médico</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.16em]">ND. Selvin Lopez<br />NaturaCare</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

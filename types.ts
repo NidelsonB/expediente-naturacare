@@ -22,7 +22,6 @@ export interface Patient {
   age: number;
   dui?: string; // Optional
   address: string;
-  phone?: string;
   chronicIllness: string; // New field for Diabetic, Hypertensive, etc.
   medicalHistory: string;
   createdAt: string;

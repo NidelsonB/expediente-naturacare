@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS patients (
     age INTEGER NOT NULL,
     dui VARCHAR(20) UNIQUE,
     address TEXT NOT NULL,
-    phone VARCHAR(20),
     chronicIllness TEXT,
     medicalHistory TEXT,
     createdAt TIMESTAMP NOT NULL DEFAULT NOW()

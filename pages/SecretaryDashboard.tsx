@@ -69,7 +69,6 @@ const SecretaryDashboard: React.FC<SecretaryDashboardProps> = ({ patients }) => 
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Nombre</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">DUI</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Edad</th>
-                  <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Teléfono</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Dirección</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Hora</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Estado</th>
@@ -81,7 +80,6 @@ const SecretaryDashboard: React.FC<SecretaryDashboardProps> = ({ patients }) => 
                     <td className="px-6 py-4 text-slate-800 font-black">{patient.name}</td>
                     <td className="px-6 py-4 text-slate-600 font-semibold">{patient.dui || '-'}</td>
                     <td className="px-6 py-4 text-slate-700 font-semibold">{patient.age}</td>
-                    <td className="px-6 py-4 text-slate-700 font-semibold">{patient.phone || '-'}</td>
                     <td className="px-6 py-4 text-slate-600 font-medium">{patient.address}</td>
                     <td className="px-6 py-4 text-slate-700 font-semibold">{formatTime(patient.createdAt)}</td>
                     <td className="px-6 py-4">

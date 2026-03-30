@@ -14,7 +14,6 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
     dui: '',
     age: '',
     address: '',
-    phone: '',
     gender: Gender.MASCULINO
   });
   const [error, setError] = useState('');
@@ -27,7 +26,6 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
       dui: '',
       age: '',
       address: '',
-      phone: '',
       gender: Gender.MASCULINO
     });
   };
@@ -56,8 +54,7 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
         gender: formData.gender,
         chronicIllness: '',
         medicalHistory: '',
-        ...(normalizedDui ? { dui: normalizedDui } : {}),
-        ...(formData.phone.trim() ? { phone: formData.phone.trim() } : {})
+        ...(normalizedDui ? { dui: normalizedDui } : {})
       });
 
       resetForm();
@@ -139,17 +136,6 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
                   value={formData.age}
                   onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Teléfono (Opcional)</label>
-                <input
-                  type="text"
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
-                  placeholder="Ej: 7777-8888"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
               </div>
 

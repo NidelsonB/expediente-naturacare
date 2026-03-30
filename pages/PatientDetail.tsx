@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Patient, Visit } from '../types';
 
@@ -18,8 +18,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const [visitMedications, setVisitMedications] = useState('');
   const [visitChronicIllness, setVisitChronicIllness] = useState('');
   const [visitMedicalHistory, setVisitMedicalHistory] = useState('');
+  const [isCertificateOpen, setIsCertificateOpen] = useState(false);
+  const [certificateText, setCertificateText] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const visitSectionRef = useRef<HTMLDivElement | null>(null);
+  const certificateSectionRef = useRef<HTMLDivElement | null>(null);
 
   const patient = useMemo(() => patients.find(p => p.id === id), [patients, id]);
   
@@ -98,6 +102,26 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     }
   };
 
+  const openVisitSection = () => {
+    setVisitChronicIllness(patient.chronicIllness || '');
+    setVisitMedicalHistory(patient.medicalHistory || '');
+    setIsCertificateOpen(false);
+    setIsNewVisitOpen(true);
+
+    setTimeout(() => {
+      visitSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
+
+  const openCertificateSection = () => {
+    setIsNewVisitOpen(false);
+    setIsCertificateOpen(true);
+
+    setTimeout(() => {
+      certificateSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
+
   const formatDate = (isoString: string) => {
     return new Intl.DateTimeFormat('es-SV', {
       year: 'numeric', month: 'long', day: 'numeric',
@@ -105,58 +129,66 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     }).format(new Date(isoString));
   };
 
+  const doctorDisplayName = 'ND. Selvin Lopez';
+
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const toHtmlParagraph = (value: string, fallback: string) => {
+    const safe = escapeHtml(value.trim() || fallback);
+    return safe.replace(/\n/g, '<br/>');
+  };
+
+  const previewDateText = new Date().toLocaleDateString('es-SV');
+
   const handlePrint = (visit: Visit) => {
     const printContent = `
-      <div style="font-family: 'Inter', sans-serif; padding: 50px; color: #1e293b; max-width: 800px; margin: 0 auto; min-height: 95vh; display: flex; flex-direction: column;">
-        <!-- Header NaturaCare -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 4px solid #059669; padding-bottom: 30px; margin-bottom: 40px;">
+      <div style="font-family: 'Inter', sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; color: #1f2937; padding: 18mm 16mm; box-sizing: border-box; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10mm;">
           <div>
-            <h1 style="margin: 0; font-size: 32px; font-weight: 900; color: #059669; letter-spacing: -1px;">NaturaCare</h1>
-            <p style="margin: 5px 0 0; color: #4b5563; font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 2px;">Clínica Médica Profesional</p>
+            <h1 style="margin: 0; font-size: 54px; line-height: 1; font-weight: 900; color: #10b981; letter-spacing: -1.8px;">NaturaCare</h1>
+            <p style="margin: 7px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Natural, Medicina Biologica,</p>
+            <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
+            <p style="margin: 12px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113,<br/>Contiguo a Planta de Bombeo de ANDA</p>
+            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px;">Tel: 2220-7977</p>
           </div>
-          <div style="text-align: right;">
-            <p style="margin: 0; font-size: 22px; font-weight: 900; color: #1e293b;">Dr. Selvin Lopez</p>
-            <p style="margin: 5px 0 0; font-size: 14px; color: #64748b; font-weight: 600;">FECHA: ${new Date(visit.date).toLocaleDateString('es-SV')}</p>
-          </div>
-        </div>
-
-        <!-- Patient Info -->
-        <div style="margin-bottom: 40px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">
-            PACIENTE: ${patient.name}
-          </p>
-          <div style="margin-top: 10px; display: flex; gap: 20px; font-size: 13px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-             <span>DUI: ${patient.dui || "N/A"}</span>
-             <span>Edad: ${patient.age} años</span>
-             <span>Género: ${patient.gender}</span>
+          <div style="text-align: right; padding-top: 2mm;">
+            <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
+            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${new Date(visit.date).toLocaleDateString('es-SV')}</p>
           </div>
         </div>
 
-        <!-- Recipe Section - This occupies the bulk of the page -->
-        <div style="flex-grow: 1; margin-bottom: 40px;">
-          <h2 style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: #059669; margin-bottom: 25px; font-weight: 900; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Receta e Indicaciones</h2>
-          <div style="font-size: 18px; line-height: 1.8; white-space: pre-wrap; color: #1e293b; font-weight: 500; min-height: 450px;">${visit.medications || "No se indicaron medicamentos."}</div>
+        <div style="border-top: 5px solid #10b981; margin-bottom: 16mm;"></div>
+
+        <div style="margin-bottom: 10mm;">
+          <p style="margin: 0; font-size: 30px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">PACIENTE: ${escapeHtml(patient.name)}</p>
+          <div style="margin-top: 4mm; display: flex; gap: 8mm; font-size: 11px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+            <span>DUI: ${escapeHtml(patient.dui || 'N/A')}</span>
+            <span>Edad: ${patient.age} años</span>
+          </div>
         </div>
 
-        <!-- Footer Section: Appointment and Signature side-by-side -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 40px;">
-          <!-- Left: Next Appointment -->
+        <div style="flex-grow: 1; margin-bottom: 14mm;">
+          <p style="margin: 0 0 2mm; font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Receta / Medicamentos:</p>
+          <div style="font-size: 26px; line-height: 1.45; color: #0f172a; font-weight: 500; min-height: 120mm; white-space: pre-wrap;">${toHtmlParagraph(visit.medications, ' ')}</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
           <div style="width: 45%;">
-            <p style="margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1px;">PRÓXIMA CITA:</p>
-            <div style="width: 100%; border-bottom: 2px solid #94a3b8; margin-top: 20px; min-height: 24px;"></div>
+            <p style="margin: 0; font-size: 11px; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1.2px;">Próxima Cita:</p>
+            <div style="width: 100%; border-bottom: 2px solid #e2e8f0; margin-top: 6mm; min-height: 8mm;"></div>
           </div>
 
-          <!-- Right: Signature -->
           <div style="width: 45%; text-align: center;">
-            <div style="width: 100%; border-top: 2px solid #1e293b; margin-bottom: 12px;"></div>
-            <p style="margin: 0; font-weight: 900; font-size: 16px; color: #1e293b;">Firma y Sello Médico</p>
-            <p style="margin: 4px 0 0; font-size: 13px; color: #64748b; font-weight: 700; text-transform: uppercase;">Dr. Selvin Lopez - NaturaCare</p>
+            <div style="width: 100%; border-top: 2px solid #1f2937; margin-bottom: 3mm;"></div>
+            <p style="margin: 0; font-weight: 900; font-size: 12px; color: #1f2937; text-transform: uppercase; letter-spacing: 0.7px;">Firma y Sello Médico</p>
+            <p style="margin: 2px 0 0; font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">${escapeHtml(doctorDisplayName)}<br/>NaturaCare</p>
           </div>
-        </div>
-
-        <!-- Professional Bottom Note -->
-        <div style="text-align: center; font-size: 10px; color: #cbd5e1; text-transform: uppercase; letter-spacing: 2px; margin-top: 30px; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-          Documento Privado y Confidencial de NaturaCare - San Salvador
         </div>
       </div>
     `;
@@ -169,11 +201,81 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
             <title>NaturaCare_Receta_${patient.name.replace(/\s+/g, '_')}</title>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
             <style>
-              body { margin: 0; font-family: 'Inter', sans-serif; }
-              @page { size: auto; margin: 0mm; }
+              body { margin: 0; font-family: 'Inter', sans-serif; background: #f1f5f9; }
+              @page { size: A4; margin: 0; }
             </style>
           </head>
           <body>${printContent}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    }
+  };
+
+  const handlePrintCertificate = () => {
+    const certificateHtml = `
+      <div style="font-family: 'Inter', sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; color: #1f2937; padding: 18mm 16mm; box-sizing: border-box; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10mm;">
+          <div>
+            <h1 style="margin: 0; font-size: 54px; line-height: 1; font-weight: 900; color: #10b981; letter-spacing: -1.8px;">NaturaCare</h1>
+            <p style="margin: 7px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Natural, Medicina Biologica,</p>
+            <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
+            <p style="margin: 12px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113,<br/>Contiguo a Planta de Bombeo de ANDA</p>
+            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px;">Tel: 2220-7977</p>
+          </div>
+          <div style="text-align: right; padding-top: 2mm;">
+            <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
+            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${previewDateText}</p>
+          </div>
+        </div>
+
+        <div style="border-top: 5px solid #10b981; margin-bottom: 16mm;"></div>
+
+        <div style="margin-bottom: 10mm;">
+          <p style="margin: 0; font-size: 30px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">PACIENTE: ${escapeHtml(patient.name)}</p>
+          <div style="margin-top: 4mm; display: flex; gap: 8mm; font-size: 11px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+            <span>DUI: ${escapeHtml(patient.dui || 'N/A')}</span>
+            <span>Edad: ${patient.age} años</span>
+          </div>
+        </div>
+
+        <div style="flex-grow: 1; margin-bottom: 14mm;">
+          <div style="font-size: 26px; line-height: 1.45; color: #0f172a; font-weight: 500; min-height: 120mm; white-space: pre-wrap;">${toHtmlParagraph(certificateText, ' ')}</div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
+          <div style="width: 45%;">
+            <p style="margin: 0; font-size: 11px; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: 1.2px;">Próxima Cita:</p>
+            <div style="width: 100%; border-bottom: 2px solid #e2e8f0; margin-top: 6mm; min-height: 8mm;"></div>
+          </div>
+
+          <div style="width: 45%; text-align: center;">
+            <div style="width: 100%; border-top: 2px solid #1f2937; margin-bottom: 3mm;"></div>
+            <p style="margin: 0; font-weight: 900; font-size: 12px; color: #1f2937; text-transform: uppercase; letter-spacing: 0.7px;">Firma y Sello Médico</p>
+            <p style="margin: 2px 0 0; font-size: 10px; color: #94a3b8; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">${escapeHtml(doctorDisplayName)}<br/>NaturaCare</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>NaturaCare_Constancia_${patient.name.replace(/\s+/g, '_')}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+            <style>
+              body { margin: 0; font-family: 'Inter', sans-serif; background: #f1f5f9; }
+              @page { size: A4; margin: 0; }
+            </style>
+          </head>
+          <body>${certificateHtml}</body>
         </html>
       `);
       printWindow.document.close();
@@ -246,23 +348,27 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
           Hojas de Visita
         </h2>
-        {!isNewVisitOpen && (
-          <button 
-            onClick={() => {
-              setVisitChronicIllness(patient.chronicIllness || '');
-              setVisitMedicalHistory(patient.medicalHistory || '');
-              setIsNewVisitOpen(true);
-            }}
-            className="px-8 py-4 bg-slate-800 text-white font-black rounded-2xl hover:bg-slate-900 transition-all shadow-xl shadow-slate-200 flex items-center uppercase text-sm tracking-widest"
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={openVisitSection}
+            className={`px-8 py-4 font-black rounded-2xl transition-all shadow-xl flex items-center uppercase text-sm tracking-widest ${isNewVisitOpen ? 'bg-emerald-600 text-white shadow-emerald-200' : 'bg-slate-800 text-white hover:bg-slate-900 shadow-slate-200'}`}
           >
             Nueva Consulta
           </button>
-        )}
+          <button
+            type="button"
+            onClick={openCertificateSection}
+            className={`px-8 py-4 font-black rounded-2xl transition-all shadow-xl flex items-center uppercase text-sm tracking-widest ${isCertificateOpen ? 'bg-teal-600 text-white shadow-teal-200' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 shadow-slate-100'}`}
+          >
+            Constancia Médica
+          </button>
+        </div>
       </div>
 
       {/* New Visit Form Card */}
       {isNewVisitOpen && (
-        <div className="bg-white rounded-[2rem] shadow-2xl border-4 border-emerald-500 overflow-hidden animate-slideUp">
+        <div ref={visitSectionRef} className="bg-white rounded-[2rem] shadow-2xl border-4 border-emerald-500 overflow-hidden animate-slideUp">
           <div className="bg-emerald-50 px-10 py-6 border-b border-emerald-100 flex justify-between items-center">
             <h3 className="text-xl font-black text-emerald-800 uppercase tracking-widest">Nueva Hoja NaturaCare</h3>
             <button 
@@ -327,6 +433,54 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                 />
               </div>
             </div>
+            <div className="pt-2">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Live Preview de Impresión</h4>
+                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">Receta</span>
+              </div>
+              <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
+                <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h5 className="text-4xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h5>
+                      <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
+                      <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
+                    </div>
+                    <div className="text-right pt-1">
+                      <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>
+                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {new Date().toLocaleDateString('es-SV')}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t-[5px] border-emerald-500 mt-8 mb-10"></div>
+
+                  <p className="text-3xl font-black tracking-tight text-slate-900">PACIENTE: {patient.name || 'N/A'}</p>
+                  <div className="mt-3 flex items-center gap-8 text-[12px] text-slate-400 font-black uppercase tracking-[0.15em]">
+                    <span>DUI: {patient.dui || 'N/A'}</span>
+                    <span>Edad: {patient.age} años</span>
+                  </div>
+
+                  <div className="mt-6 flex-1">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.16em] mb-3">Receta / Medicamentos:</p>
+                    <p className="text-xl text-slate-900 leading-relaxed min-h-[390px] whitespace-pre-wrap">
+                      {visitMedications.trim() || ' '}
+                    </p>
+                  </div>
+
+                  <div className="mt-auto pt-10 flex items-end justify-between gap-10">
+                    <div className="w-[42%]">
+                      <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.16em]">Próxima Cita:</p>
+                      <div className="border-b-2 border-slate-200 mt-6"></div>
+                    </div>
+                    <div className="w-[42%] text-center">
+                      <div className="border-t-2 border-slate-700"></div>
+                      <p className="mt-2 text-xs font-black text-slate-700 uppercase tracking-[0.14em]">Firma y sello médico</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.16em]">{doctorDisplayName}<br />NaturaCare</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-2">
               <div>
                 <label className="block text-xs font-black text-rose-600 mb-3 uppercase tracking-widest">Enfermedad Crónica</label>
@@ -367,6 +521,82 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
             </div>
           </form>
         </div>
+      )}
+
+      {isCertificateOpen && (
+      <div ref={certificateSectionRef} className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+        <div className="bg-teal-50 px-8 py-5 border-b border-teal-100 flex items-center justify-between">
+          <h3 className="text-sm font-black text-teal-800 uppercase tracking-widest">Constancia Médica</h3>
+          <span className="text-[10px] font-black text-teal-700 bg-white px-3 py-1 rounded-full border border-teal-200 uppercase tracking-widest">Live Preview</span>
+        </div>
+
+        <div className="p-8 grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <div className="space-y-5">
+            <div>
+              <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Texto de Constancia</label>
+              <textarea
+                rows={14}
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:bg-white focus:border-teal-500 transition-all text-base font-medium outline-none"
+                placeholder="Escribe aquí el contenido de la constancia..."
+                value={certificateText}
+                onChange={(e) => setCertificateText(e.target.value)}
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={handlePrintCertificate}
+                className="inline-flex items-center px-6 py-3 bg-teal-600 text-white font-black rounded-2xl hover:bg-teal-700 transition-all shadow-lg shadow-teal-100 uppercase text-xs tracking-widest"
+              >
+                Imprimir Constancia
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
+            <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h4 className="text-4xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h4>
+                  <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
+                  <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
+                </div>
+                <div className="text-right pt-1">
+                  <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>
+                  <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {previewDateText}</p>
+                </div>
+              </div>
+
+              <div className="border-t-[5px] border-emerald-500 mt-8 mb-10"></div>
+
+              <p className="text-3xl font-black tracking-tight text-slate-900">PACIENTE: {patient.name || 'N/A'}</p>
+              <div className="mt-3 flex items-center gap-8 text-[12px] text-slate-400 font-black uppercase tracking-[0.15em]">
+                <span>DUI: {patient.dui || 'N/A'}</span>
+                <span>Edad: {patient.age} años</span>
+              </div>
+
+              <div className="mt-6 flex-1">
+                <p className="text-xl text-slate-900 leading-relaxed min-h-[390px] whitespace-pre-wrap">
+                  {certificateText.trim() || ' '}
+                </p>
+              </div>
+
+              <div className="mt-auto pt-10 flex items-end justify-between gap-10">
+                <div className="w-[42%]">
+                  <p className="text-[11px] font-black text-slate-300 uppercase tracking-[0.16em]">Próxima Cita:</p>
+                  <div className="border-b-2 border-slate-200 mt-6"></div>
+                </div>
+                <div className="w-[42%] text-center">
+                  <div className="border-t-2 border-slate-700"></div>
+                  <p className="mt-2 text-xs font-black text-slate-700 uppercase tracking-[0.14em]">Firma y sello médico</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.16em]">{doctorDisplayName}<br />NaturaCare</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       )}
 
       {/* Visits History Timeline */}

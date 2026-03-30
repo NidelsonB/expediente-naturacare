@@ -27,7 +27,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout:
           </Link>
           <div className="flex items-center space-x-6">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-bold text-slate-900">Dr. {user.name}</p>
+              <p className="text-sm font-bold text-slate-900">ND. {user.name}</p>
               <p className="text-xs text-emerald-600 font-semibold uppercase tracking-widest">NaturaCare</p>
             </div>
             <button 
@@ -44,7 +44,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout:
       </main>
       <footer className="bg-white border-t border-slate-200 py-6 mt-auto print:hidden">
         <div className="max-w-6xl mx-auto px-4 text-center text-slate-400 text-sm font-medium">
-          &copy; {new Date().getFullYear()} NaturaCare - Dr. Selvin Lopez. Sistema de Gestión Médica.
+          &copy; {new Date().getFullYear()} NaturaCare - ND. Selvin Lopez. Sistema de Gestión Médica.
         </div>
       </footer>
     </div>

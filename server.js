@@ -76,9 +76,12 @@ app.post('/api/:table', async (req, res) => {
   try {
     const { table } = req.params;
     const data = req.body;
+    const sanitizedData = table === 'patients'
+      ? Object.fromEntries(Object.entries(data).filter(([key]) => key !== 'phone'))
+      : data;
     
-    const columns = Object.keys(data);
-    const values = Object.values(data).map((val, idx) => {
+    const columns = Object.keys(sanitizedData);
+    const values = Object.values(sanitizedData).map((val, idx) => {
       // Convert arrays to JSON strings for JSONB columns
       if (Array.isArray(val) && columns[idx] === 'notes') {
         return JSON.stringify(val);
@@ -103,9 +106,12 @@ app.put('/api/:table/:id', async (req, res) => {
   try {
     const { table, id } = req.params;
     const data = req.body;
+    const sanitizedData = table === 'patients'
+      ? Object.fromEntries(Object.entries(data).filter(([key]) => key !== 'phone'))
+      : data;
     
-    const columns = Object.keys(data);
-    const values = Object.values(data).map((val, idx) => {
+    const columns = Object.keys(sanitizedData);
+    const values = Object.values(sanitizedData).map((val, idx) => {
       // Convert arrays to JSON strings for JSONB columns
       if (Array.isArray(val) && columns[idx] === 'notes') {
         return JSON.stringify(val);
