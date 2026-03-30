@@ -264,6 +264,8 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                       <h4 className="text-5xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h4>
                       <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
                       <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
+                      <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-4xl font-black text-slate-900 leading-tight">ND. Selvin Lopez</p>
@@ -273,7 +275,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
 
                   <div className="border-t-[5px] border-emerald-500 mt-8 mb-10"></div>
 
-                  <p className="text-5xl font-black tracking-tight text-slate-900">PACIENTE: {formData.name.trim() || 'NOMBRE PENDIENTE'}</p>
+                  <p className="text-[50px] font-black tracking-tight text-slate-900">PACIENTE: {formData.name.trim() || 'NOMBRE PENDIENTE'}</p>
                   <div className="mt-3 flex items-center gap-8 text-[12px] text-slate-400 font-black uppercase tracking-[0.15em]">
                     <span>DUI: {formData.dui.trim() || 'N/A'}</span>
                     <span>Edad: {formData.age ? `${formData.age} años` : 'N/A'}</span>

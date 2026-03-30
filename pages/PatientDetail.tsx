@@ -149,15 +149,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const handlePrint = (visit: Visit) => {
     const printContent = `
       <div style="font-family: 'Inter', sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; color: #1f2937; padding: 18mm 16mm; box-sizing: border-box; display: flex; flex-direction: column;">
-        <div style="width: 100%; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 5mm; margin-bottom: 6mm;">
-          <p style="margin: 0; color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
-        </div>
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10mm;">
           <div>
             <h1 style="margin: 0; font-size: 54px; line-height: 1; font-weight: 900; color: #10b981; letter-spacing: -1.8px;">NaturaCare</h1>
             <p style="margin: 7px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Natural, Medicina Biologica,</p>
             <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
-            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px;">Tel: 2220-7977</p>
+            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
+            <p style="margin: 2px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
@@ -168,7 +166,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
         <div style="border-top: 5px solid #10b981; margin-bottom: 4mm;"></div>
 
         <div style="margin-bottom: 3mm;">
-          <p style="margin: 0; font-size: 18px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">${escapeHtml(patient.name)}</p>
+          <p style="margin: 0; font-size: 20px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">${escapeHtml(patient.name)}</p>
         </div>
 
         <div style="flex-grow: 1; margin-bottom: 14mm;">
@@ -218,15 +216,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const handlePrintCertificate = () => {
     const certificateHtml = `
       <div style="font-family: 'Inter', sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; color: #1f2937; padding: 18mm 16mm; box-sizing: border-box; display: flex; flex-direction: column;">
-        <div style="width: 100%; text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 5mm; margin-bottom: 6mm;">
-          <p style="margin: 0; color: #94a3b8; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
-        </div>
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10mm;">
           <div>
             <h1 style="margin: 0; font-size: 54px; line-height: 1; font-weight: 900; color: #10b981; letter-spacing: -1.8px;">NaturaCare</h1>
             <p style="margin: 7px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Natural, Medicina Biologica,</p>
             <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
-            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.7px;">Tel: 2220-7977</p>
+            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
+            <p style="margin: 2px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
@@ -237,7 +233,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
         <div style="border-top: 5px solid #10b981; margin-bottom: 4mm;"></div>
 
         <div style="margin-bottom: 3mm;">
-          <p style="margin: 0; font-size: 18px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">${escapeHtml(patient.name)}</p>
+          <p style="margin: 0; font-size: 20px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">${escapeHtml(patient.name)}</p>
         </div>
 
         <div style="flex-grow: 1; margin-bottom: 14mm;">
@@ -436,13 +432,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
               </div>
               <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
                 <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
-                  <p className="w-full text-center text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em] pb-3 mb-4 border-b border-slate-100">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h5 className="text-4xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h5>
                       <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
                       <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
                       <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>
@@ -452,7 +448,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
 
                   <div className="border-t-[5px] border-emerald-500 mt-8 mb-3"></div>
 
-                  <p className="text-xl font-black tracking-tight text-slate-900 mb-1">{patient.name || 'N/A'}</p>
+                  <p className="text-2xl font-black tracking-tight text-slate-900 mb-1">{patient.name || 'N/A'}</p>
 
                   <div className="mt-2 flex-1">
                     <p className="text-xs font-black text-slate-400 uppercase tracking-[0.16em] mb-3">Receta / Medicamentos:</p>
@@ -550,13 +546,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
 
           <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
             <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
-              <p className="w-full text-center text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em] pb-3 mb-4 border-b border-slate-100">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h4 className="text-4xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h4>
                   <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
                   <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
                   <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
                 </div>
                 <div className="text-right pt-1">
                   <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>
@@ -566,7 +562,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
 
               <div className="border-t-[5px] border-emerald-500 mt-8 mb-3"></div>
 
-              <p className="text-xl font-black tracking-tight text-slate-900 mb-1">{patient.name || 'N/A'}</p>
+              <p className="text-2xl font-black tracking-tight text-slate-900 mb-1">{patient.name || 'N/A'}</p>
 
               <div className="mt-2 flex-1">
                 <p className="text-base text-slate-900 leading-relaxed min-h-[390px] whitespace-pre-wrap">
