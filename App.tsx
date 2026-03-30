@@ -147,6 +147,16 @@ const App: React.FC = () => {
     }
   };
 
+    const updateVisit = async (visitId: string, updates: Partial<Visit>) => {
+      try {
+        const updatedVisit = await db.updateVisit(visitId, updates);
+        setVisits(prev => prev.map(visit => visit.id === visitId ? updatedVisit : visit));
+      } catch (error) {
+        console.error('Error updating visit:', error);
+        throw error;
+      }
+    };
+
   const isDuiUnique = (dui: string) => {
     if (!dui || !dui.trim()) return true;
     return !patients.some(p => p.dui === dui.trim());
@@ -181,7 +191,7 @@ const App: React.FC = () => {
           />
           <Route 
             path="/patients/:id" 
-            element={user ? <PatientDetail patients={patients} visits={visits} addVisit={addVisit} updatePatient={updatePatient} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
+              element={user ? <PatientDetail patients={patients} visits={visits} addVisit={addVisit} updatePatient={updatePatient} updateVisit={updateVisit} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/secretary" 

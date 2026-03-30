@@ -7,10 +7,11 @@ interface PatientDetailProps {
   visits: Visit[];
   addVisit: (visit: any) => Promise<void>;
   updatePatient: (patientId: string, updates: Partial<Patient>) => Promise<void>;
+  updateVisit: (visitId: string, updates: Partial<Visit>) => Promise<void>;
   doctorName: string;
 }
 
-const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, doctorName }) => {
+const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }) => {
   const { id } = useParams<{ id: string }>();
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [visitNotes, setVisitNotes] = useState<string[]>(['']);
@@ -20,6 +21,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const [visitMedicalHistory, setVisitMedicalHistory] = useState('');
   const [isCertificateOpen, setIsCertificateOpen] = useState(false);
   const [certificateText, setCertificateText] = useState('');
+  const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
+  const [editingMedications, setEditingMedications] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const visitSectionRef = useRef<HTMLDivElement | null>(null);
@@ -276,6 +281,32 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
         printWindow.print();
         printWindow.close();
       }, 500);
+    }
+  };
+
+  const startEditingRecipe = (visit: Visit) => {
+    setEditingVisitId(visit.id);
+    setEditingMedications(visit.medications || '');
+    setEditError('');
+  };
+
+  const cancelEditingRecipe = () => {
+    setEditingVisitId(null);
+    setEditingMedications('');
+    setEditError('');
+  };
+
+  const saveEditedRecipe = async (visitId: string) => {
+    setEditLoading(true);
+    setEditError('');
+    try {
+      await updateVisit(visitId, { medications: editingMedications });
+      setEditingVisitId(null);
+      setEditingMedications('');
+    } catch (err: any) {
+      setEditError(err.message || 'No se pudo actualizar la receta');
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -612,6 +643,14 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                     </svg>
                     Imprimir Receta
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => startEditingRecipe(visit)}
+                    className="mt-3 flex items-center text-xs font-black text-slate-500 hover:text-teal-700 border-2 border-slate-100 px-6 py-3 rounded-2xl bg-white hover:bg-teal-50 hover:border-teal-200 transition-all uppercase tracking-widest"
+                  >
+                    Editar Receta
+                  </button>
                 </div>
                 
                 <div className="flex-1 space-y-8">
@@ -634,7 +673,40 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                     </div>
                     <div>
                       <h4 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3">Indicaciones</h4>
-                      <p className="text-emerald-900 font-black whitespace-pre-wrap leading-relaxed">{visit.medications || "Sin prescripción indicada."}</p>
+                      {editingVisitId === visit.id ? (
+                        <div className="space-y-3">
+                          <textarea
+                            rows={5}
+                            className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-emerald-900 font-bold outline-none"
+                            value={editingMedications}
+                            onChange={(e) => setEditingMedications(e.target.value)}
+                            placeholder="Editar receta e indicaciones..."
+                          />
+                          {editError && (
+                            <p className="text-xs text-rose-700 font-black uppercase tracking-widest">{editError}</p>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => saveEditedRecipe(visit.id)}
+                              disabled={editLoading}
+                              className="px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all disabled:opacity-50"
+                            >
+                              {editLoading ? 'Guardando...' : 'Guardar receta'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={cancelEditingRecipe}
+                              disabled={editLoading}
+                              className="px-4 py-2 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-slate-50 transition-all disabled:opacity-50"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-emerald-900 font-black whitespace-pre-wrap leading-relaxed">{visit.medications || "Sin prescripción indicada."}</p>
+                      )}
                     </div>
                   </div>
                 </div>
