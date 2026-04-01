@@ -7,20 +7,17 @@ interface LoginPageProps {
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'selvinlopez@naturacare.com' && password === 'admin123') {
+    if (username === 'selvin' && password === 'Natura0922') {
       onLogin({
         id: '1',
-        email: 'selvinlopez@naturacare.com',
+        email: 'selvin',
         name: 'Selvin Lopez'
       });
-    } else {
-      setError('Credenciales inválidas. Use selvinlopez@naturacare.com / admin123');
     }
   };
 
@@ -36,25 +33,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-xl">
-              <p className="text-sm text-red-700 font-bold">{error}</p>
-            </div>
-          )}
-          
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-bold text-slate-700 mb-1 uppercase tracking-wide">
-                Correo NaturaCare
+              <label htmlFor="username" className="block text-sm font-bold text-slate-700 mb-1 uppercase tracking-wide">
+                Usuario
               </label>
               <input
-                id="email"
-                type="email"
+                id="username"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="block w-full px-4 py-3 rounded-2xl border border-slate-300 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all text-lg"
-                placeholder="usuario@naturacare.com"
+                placeholder="Ingresa tu usuario"
               />
             </div>
             <div>
