@@ -1,5 +1,7 @@
-﻿import React, { useState, useMemo, useRef } from 'react';
+﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import ErrorModal from '../components/ErrorModal';
+import { BRANDING } from '../branding';
 import { Patient, Visit } from '../types';
 
 interface PatientDetailProps {
@@ -27,8 +29,49 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const [editError, setEditError] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [modalError, setModalError] = useState('');
   const visitSectionRef = useRef<HTMLDivElement | null>(null);
   const certificateSectionRef = useRef<HTMLDivElement | null>(null);
+  const errorRef = useRef<HTMLDivElement | null>(null);
+  const editErrorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (editError) {
+      editErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [editError]);
+
+  const focusField = (fieldId: string) => {
+    window.setTimeout(() => {
+      const element = document.getElementById(fieldId) as HTMLElement | null;
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element?.focus();
+    }, 120);
+  };
+
+  const showVisitError = (message: string, fieldId?: string) => {
+    setError(message);
+    setModalError(message);
+
+    if (fieldId) {
+      focusField(fieldId);
+    }
+  };
+
+  const showEditRecipeError = (message: string, fieldId?: string) => {
+    setEditError(message);
+    setModalError(message);
+
+    if (fieldId) {
+      focusField(fieldId);
+    }
+  };
 
   const patient = useMemo(() => patients.find(p => p.id === id), [patients, id]);
   
@@ -77,10 +120,16 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const handleSaveVisit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanNotes = visitNotes.filter(n => n.trim() !== '');
-    if (cleanNotes.length === 0 && !visitTreatment.trim()) return;
+
+    setError('');
+    setModalError('');
+
+    if (cleanNotes.length === 0 && !visitTreatment.trim()) {
+      showVisitError('Falta completar el campo:\n• Motivo u observaciones de la consulta', 'note-input-0');
+      return;
+    }
     
     setLoading(true);
-    setError('');
     try {
       await addVisit({
         patientId: patient.id,
@@ -101,7 +150,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
       setVisitMedicalHistory('');
       setIsNewVisitOpen(false);
     } catch (err: any) {
-      setError(err.message || 'Error al guardar la visita');
+      const message = err?.message || 'Error al guardar la visita';
+      showVisitError(message);
     } finally {
       setLoading(false);
     }
@@ -110,6 +160,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const openVisitSection = () => {
     setVisitChronicIllness(patient.chronicIllness || '');
     setVisitMedicalHistory(patient.medicalHistory || '');
+    setError('');
+    setModalError('');
     setIsCertificateOpen(false);
     setIsNewVisitOpen(true);
 
@@ -119,6 +171,9 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   };
 
   const openCertificateSection = () => {
+    setError('');
+    setEditError('');
+    setModalError('');
     setIsNewVisitOpen(false);
     setIsCertificateOpen(true);
 
@@ -134,7 +189,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     }).format(new Date(isoString));
   };
 
-  const doctorDisplayName = 'ND. Selvin Lopez';
+  const doctorDisplayName = doctorName || BRANDING.professionalName;
 
   const escapeHtml = (value: string) =>
     value
@@ -288,23 +343,34 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     setEditingVisitId(visit.id);
     setEditingMedications(visit.medications || '');
     setEditError('');
+    setModalError('');
   };
 
   const cancelEditingRecipe = () => {
     setEditingVisitId(null);
     setEditingMedications('');
     setEditError('');
+    setModalError('');
   };
 
   const saveEditedRecipe = async (visitId: string) => {
     setEditLoading(true);
     setEditError('');
+    setModalError('');
+
+    if (!editingMedications.trim()) {
+      showEditRecipeError('Falta completar el campo:\n• Receta e indicaciones', `edit-recipe-${visitId}`);
+      setEditLoading(false);
+      return;
+    }
+
     try {
       await updateVisit(visitId, { medications: editingMedications });
       setEditingVisitId(null);
       setEditingMedications('');
     } catch (err: any) {
-      setEditError(err.message || 'No se pudo actualizar la receta');
+      const message = err?.message || 'No se pudo actualizar la receta';
+      showEditRecipeError(message);
     } finally {
       setEditLoading(false);
     }
@@ -320,7 +386,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
               <div className="flex items-center space-x-3 text-emerald-100 text-[10px] font-black uppercase tracking-[0.2em]">
                 <Link to="/" className="hover:text-white transition-colors">Buscador</Link>
                 <span className="opacity-40">/</span>
-                <span className="text-white">Expediente NaturaCare</span>
+                <span className="text-white">Expediente clínico personalizable</span>
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 <h1 className="text-5xl font-black tracking-tight">{patient.name}</h1>
@@ -331,12 +397,10 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                 )}
               </div>
             </div>
-            {patient.dui && (
-              <div className="bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-md border border-white/20">
-                <span className="block text-[10px] font-black uppercase tracking-widest text-emerald-100 opacity-60 mb-1">DUI Registrado</span>
-                <span className="text-2xl font-black font-mono tracking-tighter">{patient.dui}</span>
-              </div>
-            )}
+            <div className="bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-md border border-white/20">
+              <span className="block text-[10px] font-black uppercase tracking-widest text-emerald-100 opacity-60 mb-1">DUI</span>
+              <span className="text-2xl font-black font-mono tracking-tighter">{patient.dui || 'No aplica'}</span>
+            </div>
           </div>
         </div>
         
@@ -393,7 +457,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
       {isNewVisitOpen && (
         <div ref={visitSectionRef} className="bg-white rounded-[2rem] shadow-2xl border-4 border-emerald-500 overflow-hidden animate-slideUp">
           <div className="bg-emerald-50 px-10 py-6 border-b border-emerald-100 flex justify-between items-center">
-            <h3 className="text-xl font-black text-emerald-800 uppercase tracking-widest">Nueva Hoja NaturaCare</h3>
+            <h3 className="text-xl font-black text-emerald-800 uppercase tracking-widest">Nueva hoja clínica</h3>
             <button 
               onClick={() => {
                 setVisitNotes(['']);
@@ -411,7 +475,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
           <form onSubmit={handleSaveVisit} className="p-10 space-y-8">
             {error && (
-              <div className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
+              <div ref={errorRef} className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
                 <p className="text-sm text-rose-700 font-black uppercase tracking-wide">Error: {error}</p>
               </div>
             )}
@@ -676,6 +740,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                       {editingVisitId === visit.id ? (
                         <div className="space-y-3">
                           <textarea
+                            id={`edit-recipe-${visit.id}`}
                             rows={5}
                             className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-emerald-900 font-bold outline-none"
                             value={editingMedications}
@@ -683,7 +748,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                             placeholder="Editar receta e indicaciones..."
                           />
                           {editError && (
-                            <p className="text-xs text-rose-700 font-black uppercase tracking-widest">{editError}</p>
+                            <p ref={editErrorRef} className="text-xs text-rose-700 font-black uppercase tracking-widest">{editError}</p>
                           )}
                           <div className="flex items-center gap-2">
                             <button
@@ -719,6 +784,13 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
         )}
       </div>
+
+      <ErrorModal
+        isOpen={Boolean(modalError)}
+        message={modalError}
+        title="Revisa la información del cambio"
+        onClose={() => setModalError('')}
+      />
     </div>
   );
 };

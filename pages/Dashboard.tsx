@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { BRANDING } from '../branding';
 import { Patient, Visit } from '../types';
 
 interface DashboardProps {
@@ -78,11 +79,9 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
                   {patient.chronicIllness}
                 </span>
               )}
-              {patient.dui && (
-                <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase tracking-widest border border-slate-200">
-                  DUI: {patient.dui}
-                </span>
-              )}
+              <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-widest border ${patient.dui ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                DUI: {patient.dui || 'No aplica'}
+              </span>
             </div>
             <div className="flex flex-col space-y-1 text-slate-500 font-medium">
               <p className="text-sm">{patient.gender} • <span className="font-bold text-slate-700">{patient.age} años</span></p>
@@ -131,7 +130,7 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight">Expedientes</h1>
-          <p className="text-slate-500 text-lg font-medium">Buscador NaturaCare v1.0</p>
+          <p className="text-slate-500 text-lg font-medium">{BRANDING.appSubtitle}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <Link

@@ -78,7 +78,7 @@ const SecretaryDashboard: React.FC<SecretaryDashboardProps> = ({ patients }) => 
                 {todayPatients.map((patient) => (
                   <tr key={patient.id} className="border-b border-slate-100 hover:bg-emerald-50/30 transition-colors">
                     <td className="px-6 py-4 text-slate-800 font-black">{patient.name}</td>
-                    <td className="px-6 py-4 text-slate-600 font-semibold">{patient.dui || '-'}</td>
+                    <td className="px-6 py-4 text-slate-600 font-semibold">{patient.dui || 'No aplica'}</td>
                     <td className="px-6 py-4 text-slate-700 font-semibold">{patient.age}</td>
                     <td className="px-6 py-4 text-slate-600 font-medium">{patient.address}</td>
                     <td className="px-6 py-4 text-slate-700 font-semibold">{formatTime(patient.createdAt)}</td>

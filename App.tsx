@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { db } from './store';
+import { BRANDING, BRAND_INITIAL } from './branding';
 import { User, Patient, Visit } from './types';
 
 // Pages
@@ -21,14 +22,14 @@ const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout:
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center space-x-2 group">
             <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold group-hover:bg-emerald-700 transition-colors">
-              N
+              {BRAND_INITIAL}
             </div>
-            <span className="font-extrabold text-slate-800 text-xl tracking-tight">NaturaCare</span>
+            <span className="font-extrabold text-slate-800 text-xl tracking-tight">{BRANDING.appName}</span>
           </Link>
           <div className="flex items-center space-x-6">
             <div className="hidden sm:block text-right">
-              <p className="text-sm font-bold text-slate-900">ND. {user.name}</p>
-              <p className="text-xs text-emerald-600 font-semibold uppercase tracking-widest">NaturaCare</p>
+              <p className="text-sm font-bold text-slate-900">{user.name}</p>
+              <p className="text-xs text-emerald-600 font-semibold uppercase tracking-widest">Demo personalizable</p>
             </div>
             <button 
               onClick={onLogout}
@@ -44,7 +45,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout:
       </main>
       <footer className="bg-white border-t border-slate-200 py-6 mt-auto print:hidden">
         <div className="max-w-6xl mx-auto px-4 text-center text-slate-400 text-sm font-medium">
-          &copy; {new Date().getFullYear()} NaturaCare - ND. Selvin Lopez. Sistema de Gestión Médica.
+          &copy; {new Date().getFullYear()} {BRANDING.appName}. Demo white label lista para personalizar por cliente.
         </div>
       </footer>
     </div>
@@ -53,7 +54,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout:
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('naturacare_user');
+    const saved = localStorage.getItem(BRANDING.storageKey);
     return saved ? JSON.parse(saved) : null;
   });
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -87,12 +88,12 @@ const App: React.FC = () => {
 
   const handleLogin = (newUser: User) => {
     setUser(newUser);
-    localStorage.setItem('naturacare_user', JSON.stringify(newUser));
+    localStorage.setItem(BRANDING.storageKey, JSON.stringify(newUser));
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('naturacare_user');
+    localStorage.removeItem(BRANDING.storageKey);
   };
 
   const addPatientWithFirstVisit = async (

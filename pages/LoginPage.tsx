@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { BRANDING, BRAND_INITIAL } from '../branding';
 import { User } from '../types';
 
 interface LoginPageProps {
@@ -12,11 +13,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'selvin' && password === 'Natura0922') {
+    if (username === BRANDING.demoUser && password === BRANDING.demoPassword) {
       onLogin({
         id: '1',
-        email: 'selvin',
-        name: 'Selvin Lopez'
+        email: `${BRANDING.demoUser}@demo.local`,
+        name: BRANDING.professionalName
       });
     }
   };
@@ -26,10 +27,10 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-3xl shadow-2xl border border-slate-200">
         <div className="text-center">
           <div className="mx-auto h-20 w-20 bg-emerald-600 rounded-3xl flex items-center justify-center text-white text-4xl font-black mb-6 shadow-xl shadow-emerald-100">
-            N
+            {BRAND_INITIAL}
           </div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">NaturaCare</h2>
-          <p className="mt-2 text-slate-500 font-medium">Bienvenido, ND. Selvin Lopez</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">{BRANDING.appName}</h2>
+          <p className="mt-2 text-slate-500 font-medium">Espacio listo para mostrar la marca de cada cliente</p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -72,8 +73,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
           </button>
         </form>
         
-        <div className="text-center mt-8">
-          <p className="text-xs text-slate-400 uppercase tracking-[0.2em] font-black">Seguridad Profesional</p>
+        <div className="text-center mt-8 space-y-2">
+          <p className="text-xs text-slate-400 uppercase tracking-[0.2em] font-black">Demo White Label</p>
+          <p className="text-xs text-slate-500 font-semibold">Usuario: <span className="font-black">{BRANDING.demoUser}</span> · Clave: <span className="font-black">{BRANDING.demoPassword}</span></p>
         </div>
       </div>
     </div>

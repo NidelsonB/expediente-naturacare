@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import ErrorModal from '../components/ErrorModal';
+import { BRANDING } from '../branding';
 import { Gender } from '../types';
 
 interface NewPatientProps {
@@ -25,8 +27,44 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [duiNotApplicable, setDuiNotApplicable] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const errorRef = useRef<HTMLDivElement | null>(null);
 
   const cleanNotes = visitNotes.filter(n => n.trim() !== '');
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
+
+  const focusField = (fieldId: string) => {
+    window.setTimeout(() => {
+      const element = document.getElementById(fieldId) as HTMLElement | null;
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element?.focus();
+    }, 120);
+  };
+
+  const showValidationErrors = (fields: string[], firstFieldId: string) => {
+    const message = fields.length === 1
+      ? `Falta completar el campo:\n• ${fields[0]}`
+      : `Faltan completar los siguientes campos:\n• ${fields.join('\n• ')}`;
+
+    setError(fields.length === 1 ? `Falta completar: ${fields[0]}` : `Campos pendientes: ${fields.join(', ')}`);
+    setModalError(message);
+    focusField(firstFieldId);
+  };
+
+  const showFormError = (message: string, fieldId?: string) => {
+    setError(message);
+    setModalError(message);
+
+    if (fieldId) {
+      focusField(fieldId);
+    }
+  };
 
   const handleNoteChange = (index: number, value: string) => {
     const newNotes = [...visitNotes];
@@ -59,21 +97,50 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setModalError('');
 
-    if (!formData.name.trim()) return setError('El nombre es requerido');
-    if (!formData.address.trim()) return setError('La dirección es requerida');
-    if (formData.dui.trim() && !isDuiUnique(formData.dui)) return setError('Este DUI ya existe');
-    if (Number(formData.age) <= 0) return setError('Edad inválida');
+    const normalizedDui = duiNotApplicable ? '' : formData.dui.trim();
+    const age = Number(formData.age);
+    const missingFields: string[] = [];
+    let firstFieldId = '';
 
-    if (cleanNotes.length === 0) return setError('Ingrese el motivo de consulta');
+    if (!formData.name.trim()) {
+      missingFields.push('Nombre completo');
+      firstFieldId ||= 'patient-name';
+    }
+
+    if (!formData.address.trim()) {
+      missingFields.push('Dirección de domicilio');
+      firstFieldId ||= 'patient-address';
+    }
+
+    if (!Number.isFinite(age) || age <= 0 || age > 150) {
+      missingFields.push('Edad válida');
+      firstFieldId ||= 'patient-age';
+    }
+
+    if (cleanNotes.length === 0) {
+      missingFields.push('Motivo de consulta');
+      firstFieldId ||= 'note-input-0';
+    }
+
+    if (missingFields.length > 0) {
+      showValidationErrors(missingFields, firstFieldId);
+      return;
+    }
+
+    if (normalizedDui && !isDuiUnique(normalizedDui)) {
+      showFormError('El DUI ingresado ya existe. Verifica el número o marca "No aplica".', 'patient-dui');
+      return;
+    }
 
     setLoading(true);
     try {
       const id = await addPatientWithFirstVisit(
         {
           ...formData,
-          age: Number(formData.age),
-          dui: formData.dui.trim() || undefined
+          age,
+          dui: normalizedDui || undefined
         },
         {
           notes: cleanNotes,
@@ -84,7 +151,8 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
       
       navigate(`/patients/${id}`);
     } catch (err: any) {
-      setError(err.message || 'Error al guardar el paciente');
+      const message = err?.message || 'Error al guardar el paciente';
+      showFormError(message);
     } finally {
       setLoading(false);
     }
@@ -100,12 +168,12 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
           Regresar al buscador
         </Link>
         <h1 className="text-4xl font-black text-slate-900 tracking-tight">Nuevo Registro</h1>
-        <p className="text-slate-500 font-medium">Expediente Clínico NaturaCare</p>
+        <p className="text-slate-500 font-medium">{BRANDING.appSubtitle}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {error && (
-          <div className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
+          <div ref={errorRef} className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
             <p className="text-sm text-rose-700 font-black uppercase tracking-wide">Error: {error}</p>
           </div>
         )}
@@ -121,6 +189,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
               <div className="md:col-span-2">
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Nombre Completo</label>
                 <input
+                  id="patient-name"
                   type="text"
                   required
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
@@ -131,20 +200,42 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
               </div>
 
               <div>
-                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">DUI (Opcional)</label>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest">DUI (Opcional)</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextValue = !duiNotApplicable;
+                      setDuiNotApplicable(nextValue);
+                      setError('');
+                      if (nextValue) {
+                        setFormData({ ...formData, dui: '' });
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${duiNotApplicable ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700'}`}
+                  >
+                    {duiNotApplicable ? 'No aplica ✓' : 'Marcar no aplica'}
+                  </button>
+                </div>
                 <input
+                  id="patient-dui"
                   type="text"
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
-                  placeholder="00000000-0"
-                  value={formData.dui}
+                  disabled={duiNotApplicable}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  placeholder={duiNotApplicable ? 'Paciente sin DUI o no desea brindarlo' : '00000000-0'}
+                  value={duiNotApplicable ? '' : formData.dui}
                   onChange={(e) => setFormData({...formData, dui: e.target.value})}
                 />
+                {duiNotApplicable && (
+                  <p className="mt-2 text-xs font-bold text-emerald-700">Este paciente se guardará sin DUI.</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Edad</label>
                   <input
+                    id="patient-age"
                     type="number"
                     required
                     className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
@@ -169,6 +260,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
               <div className="md:col-span-2">
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Dirección de Domicilio</label>
                 <input
+                  id="patient-address"
                   type="text"
                   required
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
@@ -261,14 +353,14 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                 <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <h4 className="text-5xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h4>
-                      <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
-                      <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
-                      <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
+                      <h4 className="text-5xl font-black text-emerald-500 tracking-tight leading-none">{BRANDING.appName}</h4>
+                      <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">{BRANDING.taglineLine1}</p>
+                      <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">{BRANDING.taglineLine2}</p>
+                      <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">{BRANDING.phone}</p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">{BRANDING.address}</p>
                     </div>
                     <div className="text-right pt-1">
-                      <p className="text-4xl font-black text-slate-900 leading-tight">ND. Selvin Lopez</p>
+                      <p className="text-4xl font-black text-slate-900 leading-tight">{BRANDING.professionalName}</p>
                       <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {new Date().toLocaleDateString('es-SV')}</p>
                     </div>
                   </div>
@@ -277,7 +369,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
 
                   <p className="text-[50px] font-black tracking-tight text-slate-900">PACIENTE: {formData.name.trim() || 'NOMBRE PENDIENTE'}</p>
                   <div className="mt-3 flex items-center gap-8 text-[12px] text-slate-400 font-black uppercase tracking-[0.15em]">
-                    <span>DUI: {formData.dui.trim() || 'N/A'}</span>
+                    <span>DUI: {duiNotApplicable ? 'No aplica' : formData.dui.trim() || 'N/A'}</span>
                     <span>Edad: {formData.age ? `${formData.age} años` : 'N/A'}</span>
                   </div>
 
@@ -295,8 +387,8 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                     </div>
                     <div className="w-[42%] text-center">
                       <div className="border-t-2 border-slate-700"></div>
-                      <p className="mt-2 text-xs font-black text-slate-700 uppercase tracking-[0.14em]">Firma y sello médico</p>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.16em]">ND. Selvin Lopez<br />NaturaCare</p>
+                      <p className="mt-2 text-xs font-black text-slate-700 uppercase tracking-[0.14em]">Firma y sello profesional</p>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.16em]">{BRANDING.professionalName}<br />{BRANDING.appName}</p>
                     </div>
                   </div>
                 </div>
@@ -323,6 +415,13 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
           </button>
         </div>
       </form>
+
+      <ErrorModal
+        isOpen={Boolean(modalError)}
+        message={modalError}
+        title="Revisa la información del formulario"
+        onClose={() => setModalError('')}
+      />
     </div>
   );
 };
