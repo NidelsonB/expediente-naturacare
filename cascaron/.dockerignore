@@ -1,0 +1,53 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist-ssr
+*.local
+
+# Environment files (se configuran en EasyPanel)
+.env
+.env.local
+.env.*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Docker
+docker-compose.yml
+
+# Documentation (innecesarios en producción)
+README.md
+README_DATABASE.md
+INICIO_RAPIDO.md
+DEPLOY_EASYPANEL.md
+*.md
+
+# Testing
+coverage
+.nyc_output
+
+# Cache
+.cache
+.parcel-cache
+.eslintcache
+
+# Lock files (opcional - comentar si quieres usarlos)
+# package-lock.json
+# yarn.lock
