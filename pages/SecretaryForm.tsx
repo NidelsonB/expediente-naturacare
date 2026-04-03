@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import ErrorModal from '../components/ErrorModal';
 import { Gender, Patient } from '../types';
 
 interface SecretaryFormProps {
@@ -19,6 +20,42 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [duiNotApplicable, setDuiNotApplicable] = useState(false);
+  const [modalError, setModalError] = useState('');
+  const errorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (error) {
+      errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [error]);
+
+  const focusField = (fieldId: string) => {
+    window.setTimeout(() => {
+      const element = document.getElementById(fieldId) as HTMLElement | null;
+      element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element?.focus();
+    }, 120);
+  };
+
+  const showValidationErrors = (fields: string[], firstFieldId: string) => {
+    const message = fields.length === 1
+      ? `Falta completar el campo:\n• ${fields[0]}`
+      : `Faltan completar los siguientes campos:\n• ${fields.join('\n• ')}`;
+
+    setError(fields.length === 1 ? `Falta completar: ${fields[0]}` : `Campos pendientes: ${fields.join(', ')}`);
+    setModalError(message);
+    focusField(firstFieldId);
+  };
+
+  const showFormError = (message: string, fieldId?: string) => {
+    setError(message);
+    setModalError(message);
+
+    if (fieldId) {
+      focusField(fieldId);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -28,22 +65,46 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
       address: '',
       gender: Gender.MASCULINO
     });
+    setDuiNotApplicable(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    setModalError('');
 
-    const normalizedDui = formData.dui.trim();
+    const normalizedDui = duiNotApplicable ? '' : formData.dui.trim();
     const normalizedName = formData.name.trim();
     const normalizedAddress = formData.address.trim();
     const age = Number(formData.age);
+    const missingFields: string[] = [];
+    let firstFieldId = '';
 
-    if (!normalizedName) return setError('El nombre es requerido');
-    if (!normalizedAddress) return setError('La dirección es requerida');
-    if (!Number.isFinite(age) || age <= 0 || age > 150) return setError('La edad debe estar entre 1 y 150 años');
-    if (normalizedDui && !isDuiUnique(normalizedDui)) return setError('Este DUI ya existe');
+    if (!normalizedName) {
+      missingFields.push('Nombre completo');
+      firstFieldId ||= 'patient-name';
+    }
+
+    if (!Number.isFinite(age) || age <= 0 || age > 150) {
+      missingFields.push('Edad válida');
+      firstFieldId ||= 'patient-age';
+    }
+
+    if (!normalizedAddress) {
+      missingFields.push('Dirección');
+      firstFieldId ||= 'patient-address';
+    }
+
+    if (missingFields.length > 0) {
+      showValidationErrors(missingFields, firstFieldId);
+      return;
+    }
+
+    if (normalizedDui && !isDuiUnique(normalizedDui)) {
+      showFormError('El DUI ingresado ya existe. Verifica el número o marca "No aplica".', 'patient-dui');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -63,7 +124,8 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
         navigate('/secretary/today');
       }, 900);
     } catch (err: any) {
-      setError(err?.message || 'Error al registrar paciente');
+      const message = err?.message || 'Error al registrar paciente';
+      showFormError(message);
     } finally {
       setLoading(false);
     }
@@ -84,7 +146,7 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {error && (
-          <div className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
+          <div ref={errorRef} className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
             <p className="text-sm text-rose-700 font-black uppercase tracking-wide">Error: {error}</p>
           </div>
         )}
@@ -106,6 +168,7 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
               <div className="md:col-span-2">
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Nombre completo</label>
                 <input
+                  id="patient-name"
                   type="text"
                   required
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
@@ -116,19 +179,41 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
               </div>
 
               <div>
-                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">DUI (Opcional)</label>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest">DUI (Opcional)</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextValue = !duiNotApplicable;
+                      setDuiNotApplicable(nextValue);
+                      setError('');
+                      if (nextValue) {
+                        setFormData({ ...formData, dui: '' });
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${duiNotApplicable ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700'}`}
+                  >
+                    {duiNotApplicable ? 'No aplica ✓' : 'Marcar no aplica'}
+                  </button>
+                </div>
                 <input
+                  id="patient-dui"
                   type="text"
-                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
-                  placeholder="00000000-0"
-                  value={formData.dui}
+                  disabled={duiNotApplicable}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  placeholder={duiNotApplicable ? 'Paciente sin DUI o no desea brindarlo' : '00000000-0'}
+                  value={duiNotApplicable ? '' : formData.dui}
                   onChange={(e) => setFormData({ ...formData, dui: e.target.value })}
                 />
+                {duiNotApplicable && (
+                  <p className="mt-2 text-xs font-bold text-emerald-700">Este paciente se guardará sin DUI.</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Edad</label>
                 <input
+                  id="patient-age"
                   type="number"
                   required
                   min={1}
@@ -155,6 +240,7 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
               <div className="md:col-span-2">
                 <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Dirección</label>
                 <input
+                  id="patient-address"
                   type="text"
                   required
                   className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-medium outline-none"
@@ -185,6 +271,13 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
           </button>
         </div>
       </form>
+
+      <ErrorModal
+        isOpen={Boolean(modalError)}
+        message={modalError}
+        title="Revisa la información del formulario"
+        onClose={() => setModalError('')}
+      />
     </div>
   );
 };

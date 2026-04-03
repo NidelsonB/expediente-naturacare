@@ -78,11 +78,9 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
                   {patient.chronicIllness}
                 </span>
               )}
-              {patient.dui && (
-                <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded uppercase tracking-widest border border-slate-200">
-                  DUI: {patient.dui}
-                </span>
-              )}
+              <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-widest border ${patient.dui ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                DUI: {patient.dui || 'No aplica'}
+              </span>
             </div>
             <div className="flex flex-col space-y-1 text-slate-500 font-medium">
               <p className="text-sm">{patient.gender} • <span className="font-bold text-slate-700">{patient.age} años</span></p>
