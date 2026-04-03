@@ -2,10 +2,10 @@
 -- PostgreSQL Database Setup
 
 -- Create database (run this first if needed)
--- CREATE DATABASE naturacare;
+-- CREATE DATABASE clinicademo;
 
 -- Connect to the database
--- \c naturacare;
+-- \c clinicademo;
 
 -- Create patients table
 CREATE TABLE IF NOT EXISTS patients (
@@ -46,5 +46,5 @@ CREATE INDEX IF NOT EXISTS idx_visits_date ON visits(date DESC);
 -- INSERT INTO visits (id, patientId, date, notes, treatment, medications, createdAt) VALUES
 -- ('660e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440000', NOW(), '["Control de glucosa elevada", "Paciente refiere mareos"]', 'Dieta baja en azúcares y carbohidratos', 'Metformina 850mg cada 12 horas', NOW());
 
-COMMENT ON TABLE patients IS 'Tabla de pacientes del sistema NaturaCare';
+COMMENT ON TABLE patients IS 'Tabla de pacientes del sistema clinicademo';
 COMMENT ON TABLE visits IS 'Tabla de visitas médicas asociadas a pacientes';
