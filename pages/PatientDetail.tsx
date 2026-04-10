@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ErrorModal from '../components/ErrorModal';
-import { Patient, Visit } from '../types';
+import { Gender, Patient, Visit } from '../types';
 
 interface PatientDetailProps {
   patients: Patient[];
@@ -14,6 +14,19 @@ interface PatientDetailProps {
 
 const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }) => {
   const { id } = useParams<{ id: string }>();
+  const [isEditingPatient, setIsEditingPatient] = useState(false);
+  const [patientFormData, setPatientFormData] = useState({
+    name: '',
+    dui: '',
+    age: '',
+    address: '',
+    chronicIllness: '',
+    gender: Gender.MASCULINO,
+    medicalHistory: ''
+  });
+  const [patientDuiNotApplicable, setPatientDuiNotApplicable] = useState(false);
+  const [patientEditLoading, setPatientEditLoading] = useState(false);
+  const [patientEditError, setPatientEditError] = useState('');
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [visitNotes, setVisitNotes] = useState<string[]>(['']);
   const [visitTreatment, setVisitTreatment] = useState('');
@@ -29,10 +42,18 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [modalError, setModalError] = useState('');
+  const patientSectionRef = useRef<HTMLDivElement | null>(null);
   const visitSectionRef = useRef<HTMLDivElement | null>(null);
   const certificateSectionRef = useRef<HTMLDivElement | null>(null);
+  const patientErrorRef = useRef<HTMLDivElement | null>(null);
   const errorRef = useRef<HTMLDivElement | null>(null);
   const editErrorRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (patientEditError) {
+      patientErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [patientEditError]);
 
   useEffect(() => {
     if (error) {
@@ -88,6 +109,108 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
       </div>
     );
   }
+
+  const showPatientEditError = (message: string, fieldId?: string) => {
+    setPatientEditError(message);
+    setModalError(message);
+
+    if (fieldId) {
+      focusField(fieldId);
+    }
+  };
+
+  const openPatientEditSection = () => {
+    setPatientFormData({
+      name: patient.name || '',
+      dui: patient.dui || '',
+      age: String(patient.age || ''),
+      address: patient.address || '',
+      chronicIllness: patient.chronicIllness || '',
+      gender: patient.gender || Gender.MASCULINO,
+      medicalHistory: patient.medicalHistory || ''
+    });
+    setPatientDuiNotApplicable(!patient.dui);
+    setPatientEditError('');
+    setError('');
+    setEditError('');
+    setModalError('');
+    setIsNewVisitOpen(false);
+    setIsCertificateOpen(false);
+    setIsEditingPatient(true);
+
+    setTimeout(() => {
+      patientSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  };
+
+  const cancelPatientEdit = () => {
+    setIsEditingPatient(false);
+    setPatientEditError('');
+    setModalError('');
+  };
+
+  const handleSavePatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPatientEditError('');
+    setModalError('');
+
+    const normalizedDui = patientDuiNotApplicable ? '' : patientFormData.dui.trim();
+    const normalizedAge = Number(patientFormData.age);
+    const missingFields: string[] = [];
+    let firstFieldId = '';
+
+    if (!patientFormData.name.trim()) {
+      missingFields.push('Nombre completo');
+      firstFieldId ||= 'edit-patient-name';
+    }
+
+    if (!patientFormData.address.trim()) {
+      missingFields.push('Dirección de domicilio');
+      firstFieldId ||= 'edit-patient-address';
+    }
+
+    if (!Number.isFinite(normalizedAge) || normalizedAge <= 0 || normalizedAge > 150) {
+      missingFields.push('Edad válida');
+      firstFieldId ||= 'edit-patient-age';
+    }
+
+    if (missingFields.length > 0) {
+      const message = missingFields.length === 1
+        ? `Falta completar el campo:\n• ${missingFields[0]}`
+        : `Faltan completar los siguientes campos:\n• ${missingFields.join('\n• ')}`;
+      showPatientEditError(message, firstFieldId);
+      return;
+    }
+
+    const isDuplicateDui = normalizedDui
+      ? patients.some(existingPatient => existingPatient.id !== patient.id && existingPatient.dui === normalizedDui)
+      : false;
+
+    if (isDuplicateDui) {
+      showPatientEditError('El DUI ingresado ya existe. Verifica el número o marca "No aplica".', 'edit-patient-dui');
+      return;
+    }
+
+    setPatientEditLoading(true);
+    try {
+      await updatePatient(patient.id, {
+        name: patientFormData.name.trim(),
+        dui: normalizedDui || undefined,
+        age: normalizedAge,
+        address: patientFormData.address.trim(),
+        chronicIllness: patientFormData.chronicIllness.trim(),
+        gender: patientFormData.gender,
+        medicalHistory: patientFormData.medicalHistory.trim()
+      });
+      setIsEditingPatient(false);
+    } catch (err: any) {
+      const message = err?.message || 'No se pudo actualizar la información del paciente';
+      showPatientEditError(message);
+    } finally {
+      setPatientEditLoading(false);
+    }
+  };
+
   const handleNoteChange = (index: number, value: string) => {
     const newNotes = [...visitNotes];
     newNotes[index] = value;
@@ -396,9 +519,18 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                 )}
               </div>
             </div>
-            <div className="bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-md border border-white/20">
-              <span className="block text-[10px] font-black uppercase tracking-widest text-emerald-100 opacity-60 mb-1">DUI</span>
-              <span className="text-2xl font-black font-mono tracking-tighter">{patient.dui || 'No aplica'}</span>
+            <div className="flex flex-col items-start md:items-end gap-3">
+              <div className="bg-white/10 px-5 py-3 rounded-2xl backdrop-blur-md border border-white/20">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-emerald-100 opacity-60 mb-1">DUI</span>
+                <span className="text-2xl font-black font-mono tracking-tighter">{patient.dui || 'No aplica'}</span>
+              </div>
+              <button
+                type="button"
+                onClick={openPatientEditSection}
+                className={`px-5 py-3 rounded-2xl border uppercase text-[10px] tracking-[0.2em] font-black transition-all ${isEditingPatient ? 'bg-white text-emerald-700 border-white shadow-lg' : 'bg-white/10 text-white border-white/20 hover:bg-white/20'}`}
+              >
+                Editar paciente
+              </button>
             </div>
           </div>
         </div>
@@ -424,6 +556,144 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
         </div>
       </div>
+
+      {isEditingPatient && (
+        <div ref={patientSectionRef} className="bg-white rounded-[2rem] shadow-2xl border-4 border-amber-400 overflow-hidden animate-slideUp">
+          <div className="bg-amber-50 px-10 py-6 border-b border-amber-100 flex justify-between items-center">
+            <h3 className="text-xl font-black text-amber-900 uppercase tracking-widest">Editar Información del Paciente</h3>
+            <button
+              type="button"
+              onClick={cancelPatientEdit}
+              className="text-slate-400 hover:text-rose-600 font-black transition-colors uppercase text-xs"
+            >
+              Cancelar [×]
+            </button>
+          </div>
+
+          <form onSubmit={handleSavePatient} className="p-10 space-y-8">
+            {patientEditError && (
+              <div ref={patientErrorRef} className="bg-rose-50 border-l-4 border-rose-500 p-5 rounded-2xl shadow-sm">
+                <p className="text-sm text-rose-700 font-black uppercase tracking-wide">Error: {patientEditError}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Nombre Completo</label>
+                <input
+                  id="edit-patient-name"
+                  type="text"
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 transition-all text-lg font-medium outline-none"
+                  value={patientFormData.name}
+                  onChange={(e) => setPatientFormData({ ...patientFormData, name: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-2">
+                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest">DUI (Opcional)</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextValue = !patientDuiNotApplicable;
+                      setPatientDuiNotApplicable(nextValue);
+                      setPatientEditError('');
+                      if (nextValue) {
+                        setPatientFormData({ ...patientFormData, dui: '' });
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all border ${patientDuiNotApplicable ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-slate-600 border-slate-200 hover:border-amber-300 hover:text-amber-700'}`}
+                  >
+                    {patientDuiNotApplicable ? 'No aplica ✓' : 'Marcar no aplica'}
+                  </button>
+                </div>
+                <input
+                  id="edit-patient-dui"
+                  type="text"
+                  disabled={patientDuiNotApplicable}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 transition-all text-lg font-medium outline-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                  placeholder={patientDuiNotApplicable ? 'Paciente sin DUI o no desea brindarlo' : '00000000-0'}
+                  value={patientDuiNotApplicable ? '' : patientFormData.dui}
+                  onChange={(e) => setPatientFormData({ ...patientFormData, dui: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Edad</label>
+                  <input
+                    id="edit-patient-age"
+                    type="number"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 transition-all text-lg font-medium outline-none"
+                    value={patientFormData.age}
+                    onChange={(e) => setPatientFormData({ ...patientFormData, age: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Género</label>
+                  <select
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 transition-all text-lg font-black outline-none appearance-none"
+                    value={patientFormData.gender}
+                    onChange={(e) => setPatientFormData({ ...patientFormData, gender: e.target.value as Gender })}
+                  >
+                    <option value={Gender.MASCULINO}>Masculino</option>
+                    <option value={Gender.FEMENINO}>Femenino</option>
+                    <option value={Gender.OTRO}>Otro</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Dirección de Domicilio</label>
+                <input
+                  id="edit-patient-address"
+                  type="text"
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 transition-all text-lg font-medium outline-none"
+                  value={patientFormData.address}
+                  onChange={(e) => setPatientFormData({ ...patientFormData, address: e.target.value })}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-black text-rose-600 mb-2 uppercase tracking-widest">Tipo / Enfermedad Crónica</label>
+                <input
+                  type="text"
+                  className="w-full px-5 py-4 bg-rose-50/30 border border-rose-100 rounded-2xl focus:ring-4 focus:ring-rose-500/10 focus:bg-white focus:border-rose-500 transition-all text-lg font-bold text-rose-700 outline-none"
+                  value={patientFormData.chronicIllness}
+                  onChange={(e) => setPatientFormData({ ...patientFormData, chronicIllness: e.target.value })}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Otros Antecedentes</label>
+                <textarea
+                  rows={3}
+                  className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 transition-all text-lg font-medium outline-none"
+                  value={patientFormData.medicalHistory}
+                  onChange={(e) => setPatientFormData({ ...patientFormData, medicalHistory: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <button
+                type="submit"
+                disabled={patientEditLoading}
+                className="px-14 py-5 bg-amber-500 text-white font-black rounded-3xl hover:bg-amber-600 transition-all shadow-2xl shadow-amber-100 text-xl uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-3"
+              >
+                {patientEditLoading ? (
+                  <>
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <span>Guardar Cambios</span>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-black text-slate-800 flex items-center tracking-tight uppercase">
