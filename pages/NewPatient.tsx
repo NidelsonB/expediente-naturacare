@@ -9,6 +9,16 @@ interface NewPatientProps {
 }
 
 const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDuiUnique }) => {
+
+  // Formato fijo DD/MM/AAAA
+  const getCurrentPrintDate = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -360,7 +370,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-4xl font-black text-slate-900 leading-tight">ND. Selvin Lopez</p>
-                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {new Date().toLocaleDateString('es-SV')}</p>
+                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {getCurrentPrintDate()}</p>
                     </div>
                   </div>
 

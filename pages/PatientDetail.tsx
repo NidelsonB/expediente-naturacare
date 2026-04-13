@@ -13,6 +13,32 @@ interface PatientDetailProps {
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }) => {
+
+  // Formato fijo DD/MM/AAAA
+  const getCurrentPrintDate = () => {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const parseVisitDateForPrint = (dateValue: string) => {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+      const [year, month, day] = dateValue.split('-').map(Number);
+      return new Date(year, month - 1, day, 12, 0, 0);
+    }
+    return new Date(dateValue);
+  };
+
+  const getVisitPrintDate = (dateValue: string) => {
+    const d = parseVisitDateForPrint(dateValue);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   const { id } = useParams<{ id: string }>();
   const [isEditingPatient, setIsEditingPatient] = useState(false);
   const [patientFormData, setPatientFormData] = useState({
@@ -326,7 +352,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     return safe.replace(/\n/g, '<br/>');
   };
 
-  const previewDateText = new Date().toLocaleDateString('es-SV');
+  const previewDateText = getCurrentPrintDate();
 
   const handlePrint = (visit: Visit) => {
     const printContent = `
@@ -341,7 +367,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
-            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${new Date(visit.date).toLocaleDateString('es-SV')}</p>
+            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${getVisitPrintDate(visit.date)}</p>
           </div>
         </div>
 
@@ -806,7 +832,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>
-                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {new Date().toLocaleDateString('es-SV')}</p>
+                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {getCurrentPrintDate()}</p>
                     </div>
                   </div>
 
