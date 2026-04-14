@@ -9,14 +9,16 @@ interface NewPatientProps {
 }
 
 const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDuiUnique }) => {
+  const EL_SALVADOR_TIME_ZONE = 'America/El_Salvador';
 
   // Formato fijo DD/MM/AAAA
   const getCurrentPrintDate = () => {
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    return `${day}/${month}/${year}`;
+    return new Intl.DateTimeFormat('es-SV', {
+      timeZone: EL_SALVADOR_TIME_ZONE,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date());
   };
 
   const navigate = useNavigate();

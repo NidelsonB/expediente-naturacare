@@ -13,30 +13,16 @@ interface PatientDetailProps {
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }) => {
+  const EL_SALVADOR_TIME_ZONE = 'America/El_Salvador';
 
   // Formato fijo DD/MM/AAAA
   const getCurrentPrintDate = () => {
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
-  const parseVisitDateForPrint = (dateValue: string) => {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
-      const [year, month, day] = dateValue.split('-').map(Number);
-      return new Date(year, month - 1, day, 12, 0, 0);
-    }
-    return new Date(dateValue);
-  };
-
-  const getVisitPrintDate = (dateValue: string) => {
-    const d = parseVisitDateForPrint(dateValue);
-    const day = String(d.getDate()).padStart(2, '0');
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const year = d.getFullYear();
-    return `${day}/${month}/${year}`;
+    return new Intl.DateTimeFormat('es-SV', {
+      timeZone: EL_SALVADOR_TIME_ZONE,
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    }).format(new Date());
   };
 
   const { id } = useParams<{ id: string }>();
@@ -367,7 +353,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
-            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${getVisitPrintDate(visit.date)}</p>
+            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${getCurrentPrintDate()}</p>
           </div>
         </div>
 
