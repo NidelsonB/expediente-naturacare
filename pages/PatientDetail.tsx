@@ -13,16 +13,8 @@ interface PatientDetailProps {
 }
 
 const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }) => {
-  const EL_SALVADOR_TIME_ZONE = 'America/El_Salvador';
-
-  // Formato fijo DD/MM/AAAA
-  const getCurrentPrintDate = () => {
-    return new Intl.DateTimeFormat('es-SV', {
-      timeZone: EL_SALVADOR_TIME_ZONE,
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(new Date());
+  const formatPrintDate = (dateValue: string) => {
+    return dateValue.trim();
   };
 
   const { id } = useParams<{ id: string }>();
@@ -47,6 +39,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const [visitMedicalHistory, setVisitMedicalHistory] = useState('');
   const [isCertificateOpen, setIsCertificateOpen] = useState(false);
   const [certificateText, setCertificateText] = useState('');
+  const [prescriptionPrintDate, setPrescriptionPrintDate] = useState('');
+  const [certificatePrintDate, setCertificatePrintDate] = useState('');
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
   const [editingMedications, setEditingMedications] = useState('');
   const [editLoading, setEditLoading] = useState(false);
@@ -338,9 +332,15 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     return safe.replace(/\n/g, '<br/>');
   };
 
-  const previewDateText = getCurrentPrintDate();
+  const previewDateText = formatPrintDate(certificatePrintDate);
 
   const handlePrint = (visit: Visit) => {
+    const printDate = formatPrintDate(prescriptionPrintDate);
+    if (!printDate) {
+      setModalError('Ingresa la fecha manual de la receta antes de imprimir.');
+      return;
+    }
+
     const printContent = `
       <div style="font-family: 'Inter', sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; color: #1f2937; padding: 18mm 16mm; box-sizing: border-box; display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10mm;">
@@ -353,7 +353,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
-            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${getCurrentPrintDate()}</p>
+            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${escapeHtml(printDate)}</p>
           </div>
         </div>
 
@@ -408,6 +408,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   };
 
   const handlePrintCertificate = () => {
+    const printDate = formatPrintDate(certificatePrintDate);
+    if (!printDate) {
+      setModalError('Ingresa la fecha manual de la constancia antes de imprimir.');
+      return;
+    }
+
     const certificateHtml = `
       <div style="font-family: 'Inter', sans-serif; width: 210mm; min-height: 297mm; margin: 0 auto; background: #ffffff; color: #1f2937; padding: 18mm 16mm; box-sizing: border-box; display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10mm;">
@@ -420,7 +426,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
-            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${previewDateText}</p>
+            <p style="margin: 10px 0 0; font-size: 11px; color: #94a3b8; font-weight: 900; text-transform: uppercase; letter-spacing: 1.6px;">Fecha: ${escapeHtml(printDate)}</p>
           </div>
         </div>
 
@@ -806,6 +812,19 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                 <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Live Preview de Impresión</h4>
                 <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">Receta</span>
               </div>
+              <div className="mb-4 flex justify-end">
+                <div className="w-full max-w-[220px]">
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-[0.18em]">Fecha de impresión</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="DD/MM/AAAA"
+                    className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-bold text-slate-700 outline-none"
+                    value={prescriptionPrintDate}
+                    onChange={(e) => setPrescriptionPrintDate(e.target.value)}
+                  />
+                </div>
+              </div>
               <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
                 <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
                   <div className="flex items-start justify-between gap-4">
@@ -818,7 +837,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>
-                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {getCurrentPrintDate()}</p>
+                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {formatPrintDate(prescriptionPrintDate)}</p>
                     </div>
                   </div>
 
@@ -909,6 +928,18 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
               />
             </div>
 
+            <div className="max-w-[220px]">
+              <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-[0.18em]">Fecha de constancia</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="DD/MM/AAAA"
+                className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all text-sm font-bold text-slate-700 outline-none"
+                value={certificatePrintDate}
+                onChange={(e) => setCertificatePrintDate(e.target.value)}
+              />
+            </div>
+
             <div className="pt-2">
               <button
                 type="button"
@@ -978,6 +1009,18 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                 <div className="md:w-1/4">
                   <span className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] block mb-2">Visita Medica</span>
                   <p className="text-xl font-black text-slate-800 mb-6 leading-tight">{formatDate(visit.date)}</p>
+
+                  <div className="mb-3">
+                    <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-[0.18em]">Fecha manual receta</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="DD/MM/AAAA"
+                      className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-bold text-slate-700 outline-none"
+                      value={prescriptionPrintDate}
+                      onChange={(e) => setPrescriptionPrintDate(e.target.value)}
+                    />
+                  </div>
                   
                   <button 
                     onClick={() => handlePrint(visit)}

@@ -9,16 +9,8 @@ interface NewPatientProps {
 }
 
 const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDuiUnique }) => {
-  const EL_SALVADOR_TIME_ZONE = 'America/El_Salvador';
-
-  // Formato fijo DD/MM/AAAA
-  const getCurrentPrintDate = () => {
-    return new Intl.DateTimeFormat('es-SV', {
-      timeZone: EL_SALVADOR_TIME_ZONE,
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    }).format(new Date());
+  const formatPrintDate = (dateValue: string) => {
+    return dateValue.trim();
   };
 
   const navigate = useNavigate();
@@ -35,6 +27,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
   const [visitNotes, setVisitNotes] = useState<string[]>(['']);
   const [visitTreatment, setVisitTreatment] = useState('');
   const [visitMedications, setVisitMedications] = useState('');
+  const [prescriptionPrintDate, setPrescriptionPrintDate] = useState('');
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -360,6 +353,19 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">Live Preview de Impresión</h3>
                 <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 uppercase tracking-widest">Formato Receta</span>
               </div>
+              <div className="mb-4 flex justify-end">
+                <div className="w-full max-w-[220px]">
+                  <label className="block text-[10px] font-black text-slate-500 mb-2 uppercase tracking-[0.18em]">Fecha de impresión</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="DD/MM/AAAA"
+                    className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-bold text-slate-700 outline-none"
+                    value={prescriptionPrintDate}
+                    onChange={(e) => setPrescriptionPrintDate(e.target.value)}
+                  />
+                </div>
+              </div>
               <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
                 <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
                   <div className="flex items-start justify-between gap-4">
@@ -372,7 +378,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-4xl font-black text-slate-900 leading-tight">ND. Selvin Lopez</p>
-                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {getCurrentPrintDate()}</p>
+                      <p className="mt-3 text-[11px] text-slate-400 font-black uppercase tracking-[0.2em]">Fecha: {formatPrintDate(prescriptionPrintDate)}</p>
                     </div>
                   </div>
 
