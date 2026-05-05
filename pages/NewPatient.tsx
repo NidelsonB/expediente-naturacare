@@ -8,6 +8,13 @@ interface NewPatientProps {
   isDuiUnique: (dui: string) => boolean;
 }
 
+const applyDateMask = (value: string): string => {
+  const digits = value.replace(/\D/g, '').substring(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return digits.substring(0, 2) + '/' + digits.substring(2);
+  return digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4);
+};
+
 const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDuiUnique }) => {
   const formatPrintDate = (dateValue: string) => {
     return dateValue.trim();
@@ -362,7 +369,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                     placeholder="DD/MM/AAAA"
                     className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-bold text-slate-700 outline-none"
                     value={prescriptionPrintDate}
-                    onChange={(e) => setPrescriptionPrintDate(e.target.value)}
+                    onChange={(e) => setPrescriptionPrintDate(applyDateMask(e.target.value))}
                   />
                 </div>
               </div>
@@ -390,10 +397,20 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
                     <span>Edad: {formData.age ? `${formData.age} años` : 'N/A'}</span>
                   </div>
 
-                  <div className="mt-6 flex-1">
+                  <div className="mt-6">
                     <p className="text-xs font-black text-slate-400 uppercase tracking-[0.16em] mb-3">Receta / Medicamentos:</p>
-                    <p className="text-4xl text-slate-900 leading-relaxed min-h-[390px] whitespace-pre-wrap">
+                    <p className="text-4xl text-slate-900 leading-relaxed min-h-[120px] whitespace-pre-wrap">
                       {visitMedications.trim() || ' '}
+                    </p>
+                  </div>
+
+                  <div className="border-2 border-emerald-300 rounded-xl px-5 py-4 mt-6 mb-2">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.16em] mb-2">Recordatorio de Cita</p>
+                    <p className="text-[11px] text-slate-800 font-medium leading-relaxed">
+                      Si cita queda programada para{' '}
+                      <span className="inline-block w-24 border-b border-slate-700 mx-1 align-bottom"></span>{' '}
+                      debe de confirmar su asistencia a la cita un día antes al número{' '}
+                      <span className="font-black">2220-7977</span>{' '}y si por alguna razón no podrá asistir también rogamos pueda hablar e informarlo.
                     </p>
                   </div>
 

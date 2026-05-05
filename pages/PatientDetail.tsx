@@ -12,6 +12,13 @@ interface PatientDetailProps {
   doctorName: string;
 }
 
+const applyDateMask = (value: string): string => {
+  const digits = value.replace(/\D/g, '').substring(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return digits.substring(0, 2) + '/' + digits.substring(2);
+  return digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4);
+};
+
 const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }) => {
   const formatPrintDate = (dateValue: string) => {
     return dateValue.trim();
@@ -39,6 +46,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const [visitMedicalHistory, setVisitMedicalHistory] = useState('');
   const [isCertificateOpen, setIsCertificateOpen] = useState(false);
   const [certificateText, setCertificateText] = useState('');
+  const [prescriptionPrintDates, setPrescriptionPrintDates] = useState<Record<string, string>>({});
   const [prescriptionPrintDate, setPrescriptionPrintDate] = useState('');
   const [certificatePrintDate, setCertificatePrintDate] = useState('');
   const [editingVisitId, setEditingVisitId] = useState<string | null>(null);
@@ -335,7 +343,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
   const previewDateText = formatPrintDate(certificatePrintDate);
 
   const handlePrint = (visit: Visit) => {
-    const printDate = formatPrintDate(prescriptionPrintDate);
+    const printDate = formatPrintDate(prescriptionPrintDates[visit.id] || '');
     if (!printDate) {
       setModalError('Ingresa la fecha manual de la receta antes de imprimir.');
       return;
@@ -366,6 +374,11 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
         <div style="flex-grow: 1; margin-bottom: 14mm;">
           <p style="margin: 0 0 2mm; font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px;">Receta / Medicamentos:</p>
           <div style="font-size: 16px; line-height: 1.45; color: #0f172a; font-weight: 500; min-height: 120mm; white-space: pre-wrap;">${toHtmlParagraph(visit.medications, ' ')}</div>
+        </div>
+
+        <div style="border: 2px solid #10b981; border-radius: 8px; padding: 5mm 6mm; margin-bottom: 6mm;">
+          <p style="margin: 0 0 2.5mm; font-size: 10px; font-weight: 900; color: #10b981; text-transform: uppercase; letter-spacing: 1.4px;">Recordatorio de Cita</p>
+          <p style="margin: 0; font-size: 12px; color: #1f2937; font-weight: 500; line-height: 1.6;">Si cita queda programada para <span style="display: inline-block; min-width: 38mm; border-bottom: 1.5px solid #1f2937; margin: 0 1.5mm; vertical-align: bottom;"></span> debe de confirmar su asistencia a la cita un día antes al número <strong>2220-7977</strong> y si por alguna razón no podrá asistir también rogamos pueda hablar e informarlo.</p>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
@@ -821,12 +834,12 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                     placeholder="DD/MM/AAAA"
                     className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-bold text-slate-700 outline-none"
                     value={prescriptionPrintDate}
-                    onChange={(e) => setPrescriptionPrintDate(e.target.value)}
+                    onChange={(e) => setPrescriptionPrintDate(applyDateMask(e.target.value))}
                   />
                 </div>
               </div>
               <div className="bg-slate-100 border border-slate-200 rounded-3xl p-5 md:p-7">
-                <div className="mx-auto bg-white w-full max-w-[760px] min-h-[980px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col">
+                <div className="mx-auto bg-white w-full max-w-[760px] p-8 md:p-10 border border-slate-200 shadow-sm flex flex-col gap-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <h5 className="text-4xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h5>
@@ -845,10 +858,20 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
 
                   <p className="text-2xl font-black tracking-tight text-slate-900 mb-1">{patient.name || 'N/A'}</p>
 
-                  <div className="mt-2 flex-1">
+                  <div className="mt-2">
                     <p className="text-xs font-black text-slate-400 uppercase tracking-[0.16em] mb-3">Receta / Medicamentos:</p>
-                    <p className="text-base text-slate-900 leading-relaxed min-h-[390px] whitespace-pre-wrap">
+                    <p className="text-base text-slate-900 leading-relaxed min-h-[120px] whitespace-pre-wrap">
                       {visitMedications.trim() || ' '}
+                    </p>
+                  </div>
+
+                  <div className="border-2 border-emerald-300 rounded-xl px-5 py-4 mt-6 mb-2">
+                    <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.16em] mb-2">Recordatorio de Cita</p>
+                    <p className="text-[11px] text-slate-800 font-medium leading-relaxed">
+                      Si cita queda programada para{' '}
+                      <span className="inline-block w-24 border-b border-slate-700 mx-1 align-bottom"></span>{' '}
+                      debe de confirmar su asistencia a la cita un día antes al número{' '}
+                      <span className="font-black">2220-7977</span>{' '}y si por alguna razón no podrá asistir también rogamos pueda hablar e informarlo.
                     </p>
                   </div>
 
@@ -936,7 +959,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                 placeholder="DD/MM/AAAA"
                 className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all text-sm font-bold text-slate-700 outline-none"
                 value={certificatePrintDate}
-                onChange={(e) => setCertificatePrintDate(e.target.value)}
+                onChange={(e) => setCertificatePrintDate(applyDateMask(e.target.value))}
               />
             </div>
 
@@ -1017,8 +1040,8 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
                       inputMode="numeric"
                       placeholder="DD/MM/AAAA"
                       className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all text-sm font-bold text-slate-700 outline-none"
-                      value={prescriptionPrintDate}
-                      onChange={(e) => setPrescriptionPrintDate(e.target.value)}
+                      value={prescriptionPrintDates[visit.id] || ''}
+                      onChange={(e) => setPrescriptionPrintDates(prev => ({ ...prev, [visit.id]: applyDateMask(e.target.value) }))}
                     />
                   </div>
                   
