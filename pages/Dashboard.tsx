@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Patient, Visit } from '../types';
 
@@ -8,7 +8,7 @@ interface DashboardProps {
   visits: Visit[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
+function Dashboard({ patients, visits }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchMode, setSearchMode] = useState<'name' | 'dui'>('name');
   const [currentPage, setCurrentPage] = useState(1);
@@ -60,7 +60,7 @@ const Dashboard: React.FC<DashboardProps> = ({ patients, visits }) => {
     }).format(new Date(isoString));
   };
 
-  const PatientCard: React.FC<{ patient: Patient }> = ({ patient }) => {
+  const PatientCard = ({ patient }: { patient: Patient }) => {
     const lastVisit = getLastVisit(patient.id);
     return (
       <Link 

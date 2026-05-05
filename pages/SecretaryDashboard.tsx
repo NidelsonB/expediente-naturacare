@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Patient } from '../types';
 
@@ -6,7 +6,7 @@ interface SecretaryDashboardProps {
   patients: Patient[];
 }
 
-const SecretaryDashboard: React.FC<SecretaryDashboardProps> = ({ patients }) => {
+function SecretaryDashboard({ patients }: SecretaryDashboardProps) {
   const todayPatients = useMemo(() => {
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());

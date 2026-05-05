@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import ErrorModal from '../components/ErrorModal';
 import { Gender } from '../types';
@@ -15,7 +15,7 @@ const applyDateMask = (value: string): string => {
   return digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4);
 };
 
-const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDuiUnique }) => {
+function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) {
   const formatPrintDate = (dateValue: string) => {
     return dateValue.trim();
   };
@@ -83,7 +83,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
     setVisitNotes(newNotes);
   };
 
-  const handleNoteKeyDown = (index: number, e: React.KeyboardEvent) => {
+  const handleNoteKeyDown = (index: number, e: KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const newNotes = [...visitNotes];
@@ -105,7 +105,7 @@ const NewPatient: React.FC<NewPatientProps> = ({ addPatientWithFirstVisit, isDui
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setModalError('');

@@ -1,16 +1,16 @@
 
-import React, { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { User } from '../types';
 
 interface LoginPageProps {
   onLogin: (user: User) => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
+function LoginPage({ onLogin }: LoginPageProps) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (username === 'selvin' && password === 'Natura0922') {
       onLogin({

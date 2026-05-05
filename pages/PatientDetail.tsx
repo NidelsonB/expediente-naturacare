@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ErrorModal from '../components/ErrorModal';
 import { Gender, Patient, Visit } from '../types';
@@ -19,7 +19,7 @@ const applyDateMask = (value: string): string => {
   return digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4);
 };
 
-const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }) => {
+function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }: PatientDetailProps) {
   const formatPrintDate = (dateValue: string) => {
     return dateValue.trim();
   };
@@ -163,7 +163,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     setModalError('');
   };
 
-  const handleSavePatient = async (e: React.FormEvent) => {
+  const handleSavePatient = async (e: FormEvent) => {
     e.preventDefault();
     setPatientEditError('');
     setModalError('');
@@ -231,7 +231,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     setVisitNotes(newNotes);
   };
 
-  const handleNoteKeyDown = (index: number, e: React.KeyboardEvent) => {
+  const handleNoteKeyDown = (index: number, e: KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       const newNotes = [...visitNotes];
@@ -253,7 +253,7 @@ const PatientDetail: React.FC<PatientDetailProps> = ({ patients, visits, addVisi
     }
   };
 
-  const handleSaveVisit = async (e: React.FormEvent) => {
+  const handleSaveVisit = async (e: FormEvent) => {
     e.preventDefault();
     const cleanNotes = visitNotes.filter(n => n.trim() !== '');
 

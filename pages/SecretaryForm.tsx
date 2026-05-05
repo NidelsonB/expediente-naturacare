@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ErrorModal from '../components/ErrorModal';
 import { Gender, Patient } from '../types';
@@ -8,7 +8,7 @@ interface SecretaryFormProps {
   isDuiUnique: (dui: string) => boolean;
 }
 
-const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUnique }) => {
+function SecretaryForm({ addPatientOnly, isDuiUnique }: SecretaryFormProps) {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -68,7 +68,7 @@ const SecretaryForm: React.FC<SecretaryFormProps> = ({ addPatientOnly, isDuiUniq
     setDuiNotApplicable(false);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');

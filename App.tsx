@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { db } from './store';
 import { User, Patient, Visit } from './types';
@@ -12,7 +12,7 @@ import PatientDetail from './pages/PatientDetail';
 import SecretaryForm from './pages/SecretaryForm';
 import SecretaryDashboard from './pages/SecretaryDashboard';
 
-const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout: () => void }> = ({ children, user, onLogout }) => {
+function Layout({ children, user, onLogout }: { children: ReactNode; user: User | null; onLogout: () => void }) {
   if (!user) return <>{children}</>;
 
   return (
@@ -51,7 +51,7 @@ const Layout: React.FC<{ children: React.ReactNode, user: User | null, onLogout:
   );
 };
 
-const App: React.FC = () => {
+function App() {
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('naturacare_user');
     return saved ? JSON.parse(saved) : null;

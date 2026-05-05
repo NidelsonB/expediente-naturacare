@@ -1,4 +1,3 @@
-import React from 'react';
 
 interface ErrorModalProps {
   isOpen: boolean;
@@ -7,12 +6,12 @@ interface ErrorModalProps {
   title?: string;
 }
 
-const ErrorModal: React.FC<ErrorModalProps> = ({
+function ErrorModal({
   isOpen,
   message,
   onClose,
   title = 'No se pudo completar la acción'
-}) => {
+}: ErrorModalProps) {
   if (!isOpen || !message) return null;
 
   return (
