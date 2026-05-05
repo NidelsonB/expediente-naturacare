@@ -407,7 +407,7 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
                   <div className="border-2 border-emerald-300 rounded-xl px-5 py-4 mt-6 mb-2">
                     <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.16em] mb-2">Recordatorio de Cita</p>
                     <p className="text-[11px] text-slate-800 font-medium leading-relaxed">
-                      Si cita queda programada para{' '}
+                      Su cita queda programada para{' '}
                       <span className="inline-block w-24 border-b border-slate-700 mx-1 align-bottom"></span>{' '}
                       debe de confirmar su asistencia a la cita un día antes al número{' '}
                       <span className="font-black">2220-7977</span>{' '}y si por alguna razón no podrá asistir también rogamos pueda hablar e informarlo.

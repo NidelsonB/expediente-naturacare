@@ -378,7 +378,7 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
 
         <div style="border: 2px solid #10b981; border-radius: 8px; padding: 5mm 6mm; margin-bottom: 6mm;">
           <p style="margin: 0 0 2.5mm; font-size: 10px; font-weight: 900; color: #10b981; text-transform: uppercase; letter-spacing: 1.4px;">Recordatorio de Cita</p>
-          <p style="margin: 0; font-size: 12px; color: #1f2937; font-weight: 500; line-height: 1.6;">Si cita queda programada para <span style="display: inline-block; min-width: 38mm; border-bottom: 1.5px solid #1f2937; margin: 0 1.5mm; vertical-align: bottom;"></span> debe de confirmar su asistencia a la cita un día antes al número <strong>2220-7977</strong> y si por alguna razón no podrá asistir también rogamos pueda hablar e informarlo.</p>
+          <p style="margin: 0; font-size: 12px; color: #1f2937; font-weight: 500; line-height: 1.6;">Su cita queda programada para <span style="display: inline-block; min-width: 38mm; border-bottom: 1.5px solid #1f2937; margin: 0 1.5mm; vertical-align: bottom;"></span> debe de confirmar su asistencia a la cita un día antes al número <strong>2220-7977</strong> y si por alguna razón no podrá asistir también rogamos pueda hablar e informarlo.</p>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
@@ -868,7 +868,7 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
                   <div className="border-2 border-emerald-300 rounded-xl px-5 py-4 mt-6 mb-2">
                     <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.16em] mb-2">Recordatorio de Cita</p>
                     <p className="text-[11px] text-slate-800 font-medium leading-relaxed">
-                      Si cita queda programada para{' '}
+                      Su cita queda programada para{' '}
                       <span className="inline-block w-24 border-b border-slate-700 mx-1 align-bottom"></span>{' '}
                       debe de confirmar su asistencia a la cita un día antes al número{' '}
                       <span className="font-black">2220-7977</span>{' '}y si por alguna razón no podrá asistir también rogamos pueda hablar e informarlo.
