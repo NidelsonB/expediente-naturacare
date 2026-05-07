@@ -47,6 +47,98 @@ const convertToCamelCase = (row) => {
   return convertedRow;
 };
 
+// Paginated patient search with last visit embedded
+app.get('/api/patients/search', async (req, res) => {
+  try {
+    const { search = '', mode = 'name', page = '1', limit = '10' } = req.query;
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+    const offset = (pageNum - 1) * limitNum;
+
+    let whereClause = '';
+    let params = [];
+
+    if (search.trim()) {
+      whereClause = mode === 'dui'
+        ? 'WHERE p.dui ILIKE $1'
+        : 'WHERE p.name ILIKE $1';
+      params = [`%${search.trim()}%`];
+    }
+
+    const countResult = await pool.query(
+      `SELECT COUNT(*) FROM patients p ${whereClause}`,
+      params
+    );
+    const total = parseInt(countResult.rows[0].count);
+
+    const dataResult = await pool.query(
+      `SELECT p.*,
+         lv.id         AS last_visit_id,
+         lv.date       AS last_visit_date,
+         lv.treatment  AS last_visit_treatment,
+         lv.medications AS last_visit_medications
+       FROM patients p
+       LEFT JOIN LATERAL (
+         SELECT id, date, treatment, medications
+         FROM visits
+         WHERE patientid = p.id
+         ORDER BY date DESC
+         LIMIT 1
+       ) lv ON true
+       ${whereClause}
+       ORDER BY p.createdat DESC
+       LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, limitNum, offset]
+    );
+
+    const rows = dataResult.rows.map(row => {
+      const { last_visit_id, last_visit_date, last_visit_treatment, last_visit_medications, ...patientRow } = row;
+      return {
+        ...convertToCamelCase(patientRow),
+        lastVisit: last_visit_id
+          ? { id: last_visit_id, date: last_visit_date, treatment: last_visit_treatment, medications: last_visit_medications }
+          : null
+      };
+    });
+
+    res.json({ patients: rows, total, page: pageNum, limit: limitNum });
+  } catch (error) {
+    console.error('Error en patients/search:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DUI uniqueness check
+app.get('/api/patients/check-dui', async (req, res) => {
+  try {
+    const { dui, excludeId } = req.query;
+    if (!dui) return res.json({ unique: true });
+    const query = excludeId
+      ? 'SELECT id FROM patients WHERE dui = $1 AND id != $2'
+      : 'SELECT id FROM patients WHERE dui = $1';
+    const params = excludeId ? [dui, excludeId] : [dui];
+    const result = await pool.query(query, params);
+    res.json({ unique: result.rows.length === 0 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Visits for a specific patient (efficient — no full table scan)
+app.get('/api/visits/patient/:patientId', async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const result = await pool.query(
+      'SELECT * FROM visits WHERE patientid = $1 ORDER BY date DESC',
+      [patientId]
+    );
+    res.json(result.rows.map(row => convertToCamelCase(row)));
+  } catch (error) {
+    console.error('Error en visits/patient:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Generic GET endpoint for any table
 app.get('/api/:table', async (req, res) => {
   try {

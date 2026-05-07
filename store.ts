@@ -1,5 +1,5 @@
 
-import { Patient, Visit } from './types';
+import { Patient, Visit, PaginatedPatients } from './types';
 import { api } from './api';
 
 const removeUndefinedFields = <T extends Record<string, any>>(data: T): Partial<T> => {
@@ -59,10 +59,9 @@ export const db = {
 
   async getVisitsByPatient(patientId: string): Promise<Visit[]> {
     try {
-      const visits = await api.get<Visit[]>('visits');
-      return visits.filter(v => v.patientId === patientId);
+      return await api.getVisitsByPatient(patientId);
     } catch (error) {
-      console.error('Error fetching visits:', error);
+      console.error('Error fetching visits by patient:', error);
       return [];
     }
   },
@@ -88,5 +87,24 @@ export const db = {
   // Health check
   async healthCheck() {
     return await api.healthCheck();
+  },
+
+  async searchPatients(params: {
+    search?: string;
+    mode?: 'name' | 'dui';
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedPatients> {
+    return api.searchPatients(params);
+  },
+
+  async isDuiUnique(dui: string, excludeId?: string): Promise<boolean> {
+    if (!dui?.trim()) return true;
+    const query = new URLSearchParams({ dui: dui.trim() });
+    if (excludeId) query.set('excludeId', excludeId);
+    const API_URL = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:3001/api';
+    const res = await fetch(`${API_URL}/patients/check-dui?${query}`);
+    const data = await res.json() as { unique: boolean };
+    return data.unique;
   }
 };

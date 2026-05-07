@@ -33,6 +33,24 @@ export interface User {
   name: string;
 }
 
+export interface LastVisitSummary {
+  id: string;
+  date: string;
+  treatment: string;
+  medications: string;
+}
+
+export interface PatientWithLastVisit extends Patient {
+  lastVisit: LastVisitSummary | null;
+}
+
+export interface PaginatedPatients {
+  patients: PatientWithLastVisit[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export interface AppState {
   user: User | null;
   patients: Patient[];

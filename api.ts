@@ -2,6 +2,8 @@
 // En producción, Nginx hace proxy de /api a http://localhost:3001/api
 const API_URL = import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:3001/api';
 
+import type { PaginatedPatients } from './types';
+
 interface ApiResponse<T> {
   data?: T;
   error?: string;
@@ -82,6 +84,25 @@ class ApiClient {
     return this.request<T>(`${this.baseUrl}/${table}/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  async searchPatients(params: {
+    search?: string;
+    mode?: 'name' | 'dui';
+    page?: number;
+    limit?: number;
+  }): Promise<PaginatedPatients> {
+    const query = new URLSearchParams({
+      search: params.search ?? '',
+      mode: params.mode ?? 'name',
+      page: String(params.page ?? 1),
+      limit: String(params.limit ?? 10),
+    });
+    return this.request<PaginatedPatients>(`${this.baseUrl}/patients/search?${query}`);
+  }
+
+  async getVisitsByPatient(patientId: string): Promise<import('./types').Visit[]> {
+    return this.request(`${this.baseUrl}/visits/patient/${patientId}`);
   }
 
   async healthCheck(): Promise<{ status: string; database: string }> {

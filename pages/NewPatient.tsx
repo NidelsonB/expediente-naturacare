@@ -5,7 +5,7 @@ import { Gender } from '../types';
 
 interface NewPatientProps {
   addPatientWithFirstVisit: (patient: any, visit: any) => Promise<string>;
-  isDuiUnique: (dui: string) => boolean;
+  isDuiUnique: (dui: string) => Promise<boolean>;
 }
 
 const applyDateMask = (value: string): string => {
@@ -140,7 +140,7 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
       return;
     }
 
-    if (normalizedDui && !isDuiUnique(normalizedDui)) {
+    if (normalizedDui && !await isDuiUnique(normalizedDui)) {
       showFormError('El DUI ingresado ya existe. Verifica el número o marca "No aplica".', 'patient-dui');
       return;
     }
@@ -160,7 +160,9 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
         }
       );
       
-      navigate(`/patients/${id}`);
+      const slugify = (name: string) =>
+        name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      navigate(`/patients/${slugify(formData.name)}/${id}`);
     } catch (err: any) {
       const message = err?.message || 'Error al guardar el paciente';
       showFormError(message);
@@ -380,7 +382,7 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
                       <h4 className="text-5xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h4>
                       <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
                       <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
-                      <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
+                      <p className="mt-1 text-[14px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
                     </div>
                     <div className="text-right pt-1">

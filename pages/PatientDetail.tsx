@@ -1,14 +1,14 @@
 ﻿import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ErrorModal from '../components/ErrorModal';
+import { db } from '../store';
 import { Gender, Patient, Visit } from '../types';
 
 interface PatientDetailProps {
   patients: Patient[];
-  visits: Visit[];
-  addVisit: (visit: any) => Promise<void>;
+  addVisit: (visit: any) => Promise<Visit>;
   updatePatient: (patientId: string, updates: Partial<Patient>) => Promise<void>;
-  updateVisit: (visitId: string, updates: Partial<Visit>) => Promise<void>;
+  updateVisit: (visitId: string, updates: Partial<Visit>) => Promise<Visit>;
   doctorName: string;
 }
 
@@ -19,7 +19,7 @@ const applyDateMask = (value: string): string => {
   return digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4);
 };
 
-function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit, doctorName }: PatientDetailProps) {
+function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorName }: PatientDetailProps) {
   const formatPrintDate = (dateValue: string) => {
     return dateValue.trim();
   };
@@ -56,6 +56,8 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [modalError, setModalError] = useState('');
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [visitsLoading, setVisitsLoading] = useState(true);
   const patientSectionRef = useRef<HTMLDivElement | null>(null);
   const visitSectionRef = useRef<HTMLDivElement | null>(null);
   const certificateSectionRef = useRef<HTMLDivElement | null>(null);
@@ -80,6 +82,14 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
       editErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [editError]);
+
+  useEffect(() => {
+    if (!id) return;
+    setVisitsLoading(true);
+    db.getVisitsByPatient(id)
+      .then(setVisits)
+      .finally(() => setVisitsLoading(false));
+  }, [id]);
 
   const focusField = (fieldId: string) => {
     window.setTimeout(() => {
@@ -110,10 +120,8 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
   const patient = useMemo(() => patients.find(p => p.id === id), [patients, id]);
   
   const patientVisits = useMemo(() => {
-    return visits
-      .filter(v => v.patientId === id)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [visits, id]);
+    return [...visits].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [visits]);
 
   if (!patient) {
     return (
@@ -267,12 +275,14 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
     
     setLoading(true);
     try {
-      await addVisit({
+      const newVisit = await addVisit({
         patientId: patient.id,
         notes: cleanNotes,
         treatment: visitTreatment,
         medications: visitMedications
       });
+
+      setVisits(prev => [newVisit, ...prev]);
 
       await updatePatient(patient.id, {
         chronicIllness: visitChronicIllness,
@@ -356,7 +366,7 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
             <h1 style="margin: 0; font-size: 54px; line-height: 1; font-weight: 900; color: #10b981; letter-spacing: -1.8px;">NaturaCare</h1>
             <p style="margin: 7px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Natural, Medicina Biologica,</p>
             <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
-            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
+            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
             <p style="margin: 2px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
           </div>
           <div style="text-align: right; padding-top: 2mm;">
@@ -434,7 +444,7 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
             <h1 style="margin: 0; font-size: 54px; line-height: 1; font-weight: 900; color: #10b981; letter-spacing: -1.8px;">NaturaCare</h1>
             <p style="margin: 7px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Natural, Medicina Biologica,</p>
             <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
-            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
+            <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
             <p style="margin: 2px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
           </div>
           <div style="text-align: right; padding-top: 2mm;">
@@ -518,7 +528,8 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
     }
 
     try {
-      await updateVisit(visitId, { medications: editingMedications });
+      const updatedVisit = await updateVisit(visitId, { medications: editingMedications });
+      setVisits(prev => prev.map(v => v.id === visitId ? updatedVisit : v));
       setEditingVisitId(null);
       setEditingMedications('');
     } catch (err: any) {
@@ -845,7 +856,7 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
                       <h5 className="text-4xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h5>
                       <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
                       <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
-                      <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
+                      <p className="mt-1 text-[14px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
                     </div>
                     <div className="text-right pt-1">
@@ -981,7 +992,7 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
                   <h4 className="text-4xl font-black text-emerald-500 tracking-tight leading-none">NaturaCare</h4>
                   <p className="mt-2 text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Natural, Medicina Biologica,</p>
                   <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
-                  <p className="mt-1 text-[11px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
+                  <p className="mt-1 text-[14px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
                 </div>
                 <div className="text-right pt-1">
@@ -1019,7 +1030,11 @@ function PatientDetail({ patients, visits, addVisit, updatePatient, updateVisit,
 
       {/* Visits History Timeline */}
       <div className="space-y-8">
-        {patientVisits.length > 0 ? (
+        {visitsLoading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : patientVisits.length > 0 ? (
           patientVisits.map((visit, index) => (
             <div key={visit.id} className="relative bg-white border border-slate-200 rounded-[2rem] p-10 shadow-sm group hover:border-emerald-300 transition-all">
               {index === 0 && (

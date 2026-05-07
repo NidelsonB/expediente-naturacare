@@ -2,7 +2,7 @@
 import { useState, useEffect, type ReactNode } from 'react';
 import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { db } from './store';
-import { User, Patient, Visit } from './types';
+import type { User, Patient, Visit } from './types';
 
 // Pages
 import LoginPage from './pages/LoginPage';
@@ -57,7 +57,6 @@ function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [visits, setVisits] = useState<Visit[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Load data from API
@@ -72,12 +71,8 @@ function App() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [patientsData, visitsData] = await Promise.all([
-        db.getPatients(),
-        db.getVisits()
-      ]);
+      const patientsData = await db.getPatients();
       setPatients(patientsData);
-      setVisits(visitsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -107,8 +102,7 @@ function App() {
       });
       
       setPatients(prev => [...prev, newPatient]);
-      setVisits(prev => [...prev, firstVisit]);
-      
+      void firstVisit;
       return newPatient.id;
     } catch (error) {
       console.error('Error creating patient:', error);
@@ -127,10 +121,9 @@ function App() {
     }
   };
 
-  const addVisit = async (visit: Omit<Visit, 'id' | 'date' | 'createdAt'>) => {
+  const addVisit = async (visit: Omit<Visit, 'id' | 'date' | 'createdAt'>): Promise<Visit> => {
     try {
-      const newVisit = await db.createVisit(visit);
-      setVisits(prev => [...prev, newVisit]);
+      return await db.createVisit(visit);
     } catch (error) {
       console.error('Error creating visit:', error);
       throw error;
@@ -147,27 +140,24 @@ function App() {
     }
   };
 
-    const updateVisit = async (visitId: string, updates: Partial<Visit>) => {
-      try {
-        const updatedVisit = await db.updateVisit(visitId, updates);
-        setVisits(prev => prev.map(visit => visit.id === visitId ? updatedVisit : visit));
-      } catch (error) {
-        console.error('Error updating visit:', error);
-        throw error;
-      }
-    };
+  const updateVisit = async (visitId: string, updates: Partial<Visit>): Promise<Visit> => {
+    try {
+      return await db.updateVisit(visitId, updates);
+    } catch (error) {
+      console.error('Error updating visit:', error);
+      throw error;
+    }
+  };
 
-  const isDuiUnique = (dui: string) => {
-    if (!dui || !dui.trim()) return true;
-    return !patients.some(p => p.dui === dui.trim());
+  const isDuiUnique = async (dui: string): Promise<boolean> => {
+    return db.isDuiUnique(dui);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600 font-bold text-lg">Cargando datos de PostgreSQL...</p>
+          <div className="w-16 h-16 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
         </div>
       </div>
     );
@@ -183,15 +173,15 @@ function App() {
           />
           <Route 
             path="/" 
-            element={user ? <Dashboard patients={patients} visits={visits} /> : <Navigate to="/login" />} 
+            element={user ? <Dashboard /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/patients/new" 
             element={user ? <NewPatient addPatientWithFirstVisit={addPatientWithFirstVisit} isDuiUnique={isDuiUnique} /> : <Navigate to="/login" />} 
           />
           <Route 
-            path="/patients/:id" 
-              element={user ? <PatientDetail patients={patients} visits={visits} addVisit={addVisit} updatePatient={updatePatient} updateVisit={updateVisit} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
+            path="/patients/:nameSlug/:id" 
+            element={user ? <PatientDetail patients={patients} addVisit={addVisit} updatePatient={updatePatient} updateVisit={updateVisit} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/secretary" 

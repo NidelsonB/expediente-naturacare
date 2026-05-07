@@ -5,7 +5,7 @@ import { Gender, Patient } from '../types';
 
 interface SecretaryFormProps {
   addPatientOnly: (patientData: Omit<Patient, 'id' | 'createdAt'>) => Promise<string>;
-  isDuiUnique: (dui: string) => boolean;
+  isDuiUnique: (dui: string) => Promise<boolean>;
 }
 
 function SecretaryForm({ addPatientOnly, isDuiUnique }: SecretaryFormProps) {
@@ -101,7 +101,7 @@ function SecretaryForm({ addPatientOnly, isDuiUnique }: SecretaryFormProps) {
       return;
     }
 
-    if (normalizedDui && !isDuiUnique(normalizedDui)) {
+    if (normalizedDui && !await isDuiUnique(normalizedDui)) {
       showFormError('El DUI ingresado ya existe. Verifica el número o marca "No aplica".', 'patient-dui');
       return;
     }
