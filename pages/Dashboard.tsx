@@ -26,6 +26,7 @@ function Dashboard() {
 
   // Fetch whenever search/mode/page changes
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setLoading(true);
     db.searchPatients({ search: debouncedSearch, mode: searchMode, page: currentPage, limit: ITEMS_PER_PAGE })
       .then(setResult)
