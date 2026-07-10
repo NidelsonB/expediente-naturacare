@@ -24,6 +24,7 @@ export interface Patient {
   address: string;
   chronicIllness: string; // New field for Diabetic, Hypertensive, etc.
   medicalHistory: string;
+  branch: string;
   createdAt: string;
 }
 

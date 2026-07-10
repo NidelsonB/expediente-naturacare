@@ -70,6 +70,7 @@ function SecretaryDashboard({ patients }: SecretaryDashboardProps) {
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">DUI</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Edad</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Dirección</th>
+                  <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Sucursal</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Hora</th>
                   <th className="text-left px-6 py-4 text-xs font-black text-slate-500 uppercase tracking-widest">Estado</th>
                 </tr>
@@ -81,6 +82,11 @@ function SecretaryDashboard({ patients }: SecretaryDashboardProps) {
                     <td className="px-6 py-4 text-slate-600 font-semibold">{patient.dui || 'No aplica'}</td>
                     <td className="px-6 py-4 text-slate-700 font-semibold">{patient.age}</td>
                     <td className="px-6 py-4 text-slate-600 font-medium">{patient.address}</td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-3 py-1 text-[10px] font-black rounded-full uppercase border tracking-wider ${patient.branch === 'San Miguel' ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                        {patient.branch || 'San Marcos'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 text-slate-700 font-semibold">{formatTime(patient.createdAt)}</td>
                     <td className="px-6 py-4">
                       <span className="inline-flex px-3 py-1 bg-amber-50 text-amber-700 text-[10px] font-black rounded-full uppercase border border-amber-200 tracking-wider">

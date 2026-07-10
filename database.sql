@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS patients (
     address TEXT NOT NULL,
     chronicIllness TEXT,
     medicalHistory TEXT,
+    branch VARCHAR(50) NOT NULL DEFAULT 'San Marcos',
     createdAt TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

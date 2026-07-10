@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../store';
 import type { PatientWithLastVisit, PaginatedPatients } from '../types';
@@ -78,6 +78,9 @@ function Dashboard() {
             )}
             <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase tracking-widest border ${patient.dui ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
               DUI: {patient.dui || 'No aplica'}
+            </span>
+            <span className={`px-3 py-1 text-[10px] font-black rounded-full uppercase border tracking-wider ${patient.branch === 'San Miguel' ? 'bg-sky-50 text-sky-700 border-sky-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100'}`}>
+              {patient.branch || 'San Marcos'}
             </span>
           </div>
           <div className="flex flex-col space-y-1 text-slate-500 font-medium">

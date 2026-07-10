@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ErrorModal from '../components/ErrorModal';
 import { db } from '../store';
@@ -33,7 +33,8 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
     address: '',
     chronicIllness: '',
     gender: Gender.MASCULINO,
-    medicalHistory: ''
+    medicalHistory: '',
+    branch: 'San Marcos'
   });
   const [patientDuiNotApplicable, setPatientDuiNotApplicable] = useState(false);
   const [patientEditLoading, setPatientEditLoading] = useState(false);
@@ -149,7 +150,8 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
       address: patient.address || '',
       chronicIllness: patient.chronicIllness || '',
       gender: patient.gender || Gender.MASCULINO,
-      medicalHistory: patient.medicalHistory || ''
+      medicalHistory: patient.medicalHistory || '',
+      branch: patient.branch || 'San Marcos'
     });
     setPatientDuiNotApplicable(!patient.dui);
     setPatientEditError('');
@@ -222,7 +224,8 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
         address: patientFormData.address.trim(),
         chronicIllness: patientFormData.chronicIllness.trim(),
         gender: patientFormData.gender,
-        medicalHistory: patientFormData.medicalHistory.trim()
+        medicalHistory: patientFormData.medicalHistory.trim(),
+        branch: patientFormData.branch
       });
       setIsEditingPatient(false);
     } catch (err: any) {
@@ -368,6 +371,7 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
             <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
             <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
             <p style="margin: 2px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
+            <p style="margin: 2px 0 0; color: #10b981; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Sucursal: ${escapeHtml(patient.branch || 'San Marcos')}</p>
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
@@ -446,6 +450,7 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
             <p style="margin: 2px 0 0; color: #64748b; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 1.4px;">Medicina Regenerativa</p>
             <p style="margin: 4px 0 0; color: #0ea5a1; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.4px;">Tel: 2220-7977</p>
             <p style="margin: 2px 0 0; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px;">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
+            <p style="margin: 2px 0 0; color: #10b981; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">Sucursal: ${escapeHtml(patient.branch || 'San Marcos')}</p>
           </div>
           <div style="text-align: right; padding-top: 2mm;">
             <p style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; line-height: 1.2;">${escapeHtml(doctorDisplayName)}</p>
@@ -559,6 +564,9 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
                     {patient.chronicIllness}
                   </span>
                 )}
+                <span className={`px-4 py-1.5 rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg ${patient.branch === 'San Miguel' ? 'bg-sky-500 text-white shadow-sky-900/20' : 'bg-emerald-700 text-white shadow-emerald-900/20'}`}>
+                  Sucursal: {patient.branch || 'San Marcos'}
+                </span>
               </div>
             </div>
             <div className="flex flex-col items-start md:items-end gap-3">
@@ -660,7 +668,7 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Edad</label>
                   <input
@@ -681,6 +689,17 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
                     <option value={Gender.MASCULINO}>Masculino</option>
                     <option value={Gender.FEMENINO}>Femenino</option>
                     <option value={Gender.OTRO}>Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Sucursal</label>
+                  <select
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-amber-500/10 focus:bg-white focus:border-amber-500 transition-all text-lg font-black outline-none appearance-none"
+                    value={patientFormData.branch}
+                    onChange={(e) => setPatientFormData({ ...patientFormData, branch: e.target.value })}
+                  >
+                    <option value="San Marcos">San Marcos</option>
+                    <option value="San Miguel">San Miguel</option>
                   </select>
                 </div>
               </div>
@@ -858,6 +877,7 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
                       <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
                       <p className="mt-1 text-[14px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
+                      <p className="mt-1 text-[11px] text-emerald-600 font-black uppercase tracking-[0.15em]">Sucursal: {patient.branch || 'San Marcos'}</p>
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>
@@ -994,6 +1014,7 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
                   <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
                   <p className="mt-1 text-[14px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
+                  <p className="mt-1 text-[11px] text-emerald-600 font-black uppercase tracking-[0.15em]">Sucursal: {patient.branch || 'San Marcos'}</p>
                 </div>
                 <div className="text-right pt-1">
                   <p className="text-3xl font-black text-slate-900 leading-tight">{doctorDisplayName}</p>

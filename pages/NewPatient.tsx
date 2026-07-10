@@ -28,7 +28,8 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
     address: '',
     chronicIllness: '',
     gender: Gender.MASCULINO,
-    medicalHistory: ''
+    medicalHistory: '',
+    branch: 'San Marcos'
   });
   
   const [visitNotes, setVisitNotes] = useState<string[]>(['']);
@@ -244,7 +245,7 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
                 )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Edad</label>
                   <input
@@ -266,6 +267,17 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
                     <option value={Gender.MASCULINO}>Masculino</option>
                     <option value={Gender.FEMENINO}>Femenino</option>
                     <option value={Gender.OTRO}>Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-slate-500 mb-2 uppercase tracking-widest">Sucursal</label>
+                  <select
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white focus:border-emerald-500 transition-all text-lg font-black outline-none appearance-none"
+                    value={formData.branch}
+                    onChange={(e) => setFormData({...formData, branch: e.target.value})}
+                  >
+                    <option value="San Marcos">San Marcos</option>
+                    <option value="San Miguel">San Miguel</option>
                   </select>
                 </div>
               </div>
@@ -384,6 +396,7 @@ function NewPatient({ addPatientWithFirstVisit, isDuiUnique }: NewPatientProps) 
                       <p className="text-[11px] text-slate-500 font-black uppercase tracking-[0.18em]">Medicina Regenerativa</p>
                       <p className="mt-1 text-[14px] text-teal-600 font-black uppercase tracking-[0.18em]">Tel: 2220-7977</p>
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.1em]">Carretera a San Marcos KM 5 1/2 #113, Contiguo a Planta de Bombeo de ANDA</p>
+                      <p className="mt-1 text-[11px] text-emerald-600 font-black uppercase tracking-[0.15em]">Sucursal: {formData.branch}</p>
                     </div>
                     <div className="text-right pt-1">
                       <p className="text-4xl font-black text-slate-900 leading-tight">ND. Selvin Lopez</p>
