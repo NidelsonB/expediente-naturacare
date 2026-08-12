@@ -2,6 +2,8 @@
 
 Una aplicación de gestión de expedientes médicos construida con React, TypeScript y Vite.
 
+El repositorio también incluye una aplicación Android nativa optimizada para tablets en [android/](android/README.md).
+
 ## Características
 
 - Dashboard de pacientes
