@@ -460,10 +460,6 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
 
         <div style="border-top: 5px solid #10b981; margin-bottom: 4mm;"></div>
 
-        <div style="margin-bottom: 3mm;">
-          <p style="margin: 0; font-size: 20px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px;">${escapeHtml(patient.name)}</p>
-        </div>
-
         <div style="flex-grow: 1; margin-bottom: 14mm;">
           <div style="font-size: 16px; line-height: 1.45; color: #0f172a; font-weight: 500; min-height: 120mm; white-space: pre-wrap;">${toHtmlParagraph(certificateText, ' ')}</div>
         </div>
@@ -1023,8 +1019,6 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
               </div>
 
               <div className="border-t-[5px] border-emerald-500 mt-8 mb-3"></div>
-
-              <p className="text-2xl font-black tracking-tight text-slate-900 mb-1">{patient.name || 'N/A'}</p>
 
               <div className="mt-2 flex-1">
                 <p className="text-base text-slate-900 leading-relaxed min-h-[390px] whitespace-pre-wrap">
