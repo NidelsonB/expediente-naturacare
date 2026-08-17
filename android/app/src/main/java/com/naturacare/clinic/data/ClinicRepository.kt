@@ -62,6 +62,8 @@ class ClinicRepository(private val api: NaturaCareApi) {
         )
     }
 
+    suspend fun deletePatient(id: String) = api.deletePatient(id)
+
     suspend fun createVisit(patientId: String, draft: VisitDraft): Visit {
         val notes = draft.notes.map(String::trim).filter(String::isNotEmpty)
         require(notes.isNotEmpty()) { "Ingresa al menos un motivo de consulta." }

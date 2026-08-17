@@ -90,6 +90,22 @@ class AppViewModel(private val repository: ClinicRepository) : ViewModel() {
         onSuccess(patient)
     }
 
+    fun deletePatient(id: String, onSuccess: () -> Unit) = launchRequest {
+        repository.deletePatient(id)
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            searchResult = current.searchResult.copy(
+                patients = current.searchResult.patients.filterNot { it.id == id },
+                total = (current.searchResult.total - 1).coerceAtLeast(0),
+            ),
+            todayPatients = current.todayPatients.filterNot { it.id == id },
+            patientCache = current.patientCache - id,
+            visits = current.visits - id,
+            notice = "Paciente eliminado.",
+        )
+        onSuccess()
+    }
+
     fun addVisit(patient: Patient, draft: VisitDraft, onSuccess: (Visit) -> Unit) = launchRequest {
         val visit = repository.createVisit(patient.id, draft)
         var updatedPatient = patient

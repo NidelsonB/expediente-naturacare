@@ -1,6 +1,7 @@
 package com.naturacare.clinic.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -20,11 +21,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Print
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +68,7 @@ fun PatientDetailScreen(
     onBack: () -> Unit,
     onNewVisit: () -> Unit,
     onUpdatePatient: (PatientDraft, () -> Unit) -> Unit,
+    onDeletePatient: () -> Unit,
     onUpdateRecipe: (String, String) -> Unit,
 ) {
     LaunchedEffect(patient?.id) { if (patient != null) onLoadVisits() }
@@ -80,6 +84,7 @@ fun PatientDetailScreen(
 
     var editingPatient by remember { mutableStateOf(false) }
     var certificateOpen by remember { mutableStateOf(false) }
+    var deleteConfirmationOpen by remember { mutableStateOf(false) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val compact = maxWidth < 600.dp
         val split = maxWidth >= 900.dp
@@ -90,6 +95,7 @@ fun PatientDetailScreen(
                     onBack,
                     onNewVisit,
                     { editingPatient = true },
+                    { deleteConfirmationOpen = true },
                     { certificateOpen = true },
                     Modifier.width(300.dp).fillMaxHeight(),
                 )
@@ -102,6 +108,7 @@ fun PatientDetailScreen(
                     onBack = onBack,
                     onNewVisit = onNewVisit,
                     onEdit = { editingPatient = true },
+                    onDelete = { deleteConfirmationOpen = true },
                     onCertificate = { certificateOpen = true },
                 )
                 Spacer(Modifier.height(12.dp))
@@ -114,6 +121,7 @@ fun PatientDetailScreen(
                     onBack,
                     onNewVisit,
                     { editingPatient = true },
+                    { deleteConfirmationOpen = true },
                     { certificateOpen = true },
                     Modifier.fillMaxWidth(),
                 )
@@ -134,6 +142,23 @@ fun PatientDetailScreen(
     if (certificateOpen) {
         CertificateDialog(patient = patient, onDismiss = { certificateOpen = false })
     }
+    if (deleteConfirmationOpen) {
+        AlertDialog(
+            onDismissRequest = { if (!loading) deleteConfirmationOpen = false },
+            title = { Text("Eliminar paciente") },
+            text = { Text("Eliminarás permanentemente el expediente de ${patient.name} y todas sus consultas. Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = onDeletePatient,
+                    enabled = !loading,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                ) { Text(if (loading) "Eliminando…" else "Eliminar paciente") }
+            },
+            dismissButton = {
+                OutlinedButton(onClick = { deleteConfirmationOpen = false }, enabled = !loading) { Text("Cancelar") }
+            },
+        )
+    }
 }
 
 @Composable
@@ -142,6 +167,7 @@ private fun MobilePatientSummary(
     onBack: () -> Unit,
     onNewVisit: () -> Unit,
     onEdit: () -> Unit,
+    onDelete: () -> Unit,
     onCertificate: () -> Unit,
 ) {
     ClinicCard(Modifier.fillMaxWidth()) {
@@ -173,11 +199,21 @@ private fun MobilePatientSummary(
                     Spacer(Modifier.width(5.dp))
                     Text("Editar")
                 }
-                OutlinedButton(onClick = onCertificate, modifier = Modifier.weight(1f).height(48.dp)) {
+                OutlinedButton(
+                    onClick = onDelete,
+                    modifier = Modifier.weight(1f).height(48.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                ) {
+                    Icon(Icons.Outlined.Delete, null)
+                    Spacer(Modifier.width(5.dp))
+                    Text("Eliminar")
+                }
+            }
+            OutlinedButton(onClick = onCertificate, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                     Icon(Icons.Outlined.Description, null)
                     Spacer(Modifier.width(5.dp))
                     Text("Constancia")
-                }
             }
         }
     }
@@ -189,6 +225,7 @@ private fun PatientSummaryPanel(
     onBack: () -> Unit,
     onNewVisit: () -> Unit,
     onEdit: () -> Unit,
+    onDelete: () -> Unit,
     onCertificate: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -226,6 +263,16 @@ private fun PatientSummaryPanel(
                 Icon(Icons.Outlined.Edit, null)
                 Spacer(Modifier.width(6.dp))
                 Text("Editar paciente")
+            }
+            OutlinedButton(
+                onClick = onDelete,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+            ) {
+                Icon(Icons.Outlined.Delete, null)
+                Spacer(Modifier.width(6.dp))
+                Text("Eliminar paciente")
             }
             OutlinedButton(onClick = onCertificate, modifier = Modifier.fillMaxWidth().height(48.dp)) {
                 Icon(Icons.Outlined.Description, null)

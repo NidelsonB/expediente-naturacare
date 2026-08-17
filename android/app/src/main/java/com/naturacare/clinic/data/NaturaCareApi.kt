@@ -1,6 +1,7 @@
 package com.naturacare.clinic.data
 
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -30,6 +31,9 @@ interface NaturaCareApi {
 
     @PUT("patients/{id}")
     suspend fun updatePatient(@Path("id") id: String, @Body patient: PatientUpdate): Patient
+
+    @DELETE("patients/{id}")
+    suspend fun deletePatient(@Path("id") id: String)
 
     @GET("visits/patient/{patientId}")
     suspend fun getVisits(@Path("patientId") patientId: String): List<Visit>

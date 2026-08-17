@@ -140,6 +140,16 @@ function App() {
     }
   };
 
+  const deletePatient = async (patientId: string) => {
+    try {
+      await db.deletePatient(patientId);
+      setPatients(prev => prev.filter(patient => patient.id !== patientId));
+    } catch (error) {
+      console.error('Error deleting patient:', error);
+      throw error;
+    }
+  };
+
   const updateVisit = async (visitId: string, updates: Partial<Visit>): Promise<Visit> => {
     try {
       return await db.updateVisit(visitId, updates);
@@ -181,7 +191,7 @@ function App() {
           />
           <Route 
             path="/patients/:nameSlug/:id" 
-            element={user ? <PatientDetail patients={patients} addVisit={addVisit} updatePatient={updatePatient} updateVisit={updateVisit} doctorName={user?.name || ''} /> : <Navigate to="/login" />} 
+            element={user ? <PatientDetail patients={patients} addVisit={addVisit} updatePatient={updatePatient} deletePatient={deletePatient} updateVisit={updateVisit} doctorName={user?.name || ''} /> : <Navigate to="/login" />}
           />
           <Route 
             path="/secretary" 

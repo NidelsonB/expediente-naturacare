@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import ErrorModal from '../components/ErrorModal';
 import { db } from '../store';
 import { Gender, Patient, Visit } from '../types';
@@ -8,6 +8,7 @@ interface PatientDetailProps {
   patients: Patient[];
   addVisit: (visit: any) => Promise<Visit>;
   updatePatient: (patientId: string, updates: Partial<Patient>) => Promise<void>;
+  deletePatient: (patientId: string) => Promise<void>;
   updateVisit: (visitId: string, updates: Partial<Visit>) => Promise<Visit>;
   doctorName: string;
 }
@@ -19,12 +20,13 @@ const applyDateMask = (value: string): string => {
   return digits.substring(0, 2) + '/' + digits.substring(2, 4) + '/' + digits.substring(4);
 };
 
-function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorName }: PatientDetailProps) {
+function PatientDetail({ patients, addVisit, updatePatient, deletePatient, updateVisit, doctorName }: PatientDetailProps) {
   const formatPrintDate = (dateValue: string) => {
     return dateValue.trim();
   };
 
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [isEditingPatient, setIsEditingPatient] = useState(false);
   const [patientFormData, setPatientFormData] = useState({
     name: '',
@@ -38,6 +40,8 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
   });
   const [patientDuiNotApplicable, setPatientDuiNotApplicable] = useState(false);
   const [patientEditLoading, setPatientEditLoading] = useState(false);
+  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [patientEditError, setPatientEditError] = useState('');
   const [isNewVisitOpen, setIsNewVisitOpen] = useState(false);
   const [visitNotes, setVisitNotes] = useState<string[]>(['']);
@@ -171,6 +175,19 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
     setIsEditingPatient(false);
     setPatientEditError('');
     setModalError('');
+  };
+
+  const handleDeletePatient = async () => {
+    setDeleteLoading(true);
+    try {
+      await deletePatient(patient.id);
+      navigate('/', { replace: true });
+    } catch (err: any) {
+      setDeleteConfirmationOpen(false);
+      setModalError(err?.message || 'No se pudo eliminar el paciente.');
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const handleSavePatient = async (e: FormEvent) => {
@@ -577,6 +594,13 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
               >
                 Editar paciente
               </button>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmationOpen(true)}
+                className="px-5 py-3 rounded-xl border border-rose-200 bg-rose-600 text-white text-[10px] font-black uppercase tracking-[0.2em] transition-colors hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-emerald-600"
+              >
+                Eliminar paciente
+              </button>
             </div>
           </div>
         </div>
@@ -602,6 +626,39 @@ function PatientDetail({ patients, addVisit, updatePatient, updateVisit, doctorN
           </div>
         </div>
       </div>
+
+      {deleteConfirmationOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4" role="alertdialog" aria-modal="true" aria-labelledby="delete-patient-title" aria-describedby="delete-patient-description">
+          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white shadow-lg">
+            <div className="border-b border-slate-200 px-6 py-5">
+              <h3 id="delete-patient-title" className="text-lg font-black text-slate-900">Eliminar paciente</h3>
+            </div>
+            <div className="px-6 py-5">
+              <p id="delete-patient-description" className="text-sm font-medium leading-relaxed text-slate-700">
+                Eliminarás permanentemente el expediente de {patient.name} y todas sus consultas. Esta acción no se puede deshacer.
+              </p>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-200 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmationOpen(false)}
+                disabled={deleteLoading}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-bold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeletePatient}
+                disabled={deleteLoading}
+                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {deleteLoading ? 'Eliminando…' : 'Eliminar paciente'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isEditingPatient && (
         <div ref={patientSectionRef} className="bg-white rounded-[2rem] shadow-2xl border-4 border-amber-400 overflow-hidden animate-slideUp">

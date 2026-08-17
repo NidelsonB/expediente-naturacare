@@ -178,6 +178,7 @@ fun NaturaCareApp(viewModel: AppViewModel, onSessionChanged: (Boolean) -> Unit) 
                                 onBack = { navController.popBackStack() },
                                 onNewVisit = { navController.navigate("patient/$id/visit") },
                                 onUpdatePatient = { draft, done -> viewModel.updatePatient(id, draft) { done() } },
+                                onDeletePatient = { viewModel.deletePatient(id) { navController.popBackStack() } },
                                 onUpdateRecipe = { visitId, medication -> viewModel.updateRecipe(id, visitId, medication) },
                             )
                         }
